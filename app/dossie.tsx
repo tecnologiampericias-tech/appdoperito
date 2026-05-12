@@ -533,20 +533,6 @@ function DocumentCard({
             {doc.description}
           </Text>
 
-          {isAttached && file && (
-            <View style={styles.fileChip}>
-              <MaterialCommunityIcons
-                name={fileIconFor(file)}
-                size={13}
-                color="#4AAFA6"
-              />
-              <Text style={styles.fileChipName} numberOfLines={1}>
-                {file.name}
-              </Text>
-              <Text style={styles.fileChipSize}>· {formatBytes(file.size)}</Text>
-            </View>
-          )}
-
           <View style={styles.docStatusRow}>
             {isAttached ? (
               <>
@@ -751,28 +737,6 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     marginBottom: 6,
   },
-  fileChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F4FAF8',
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    alignSelf: 'flex-start',
-    marginBottom: 6,
-    gap: 5,
-    maxWidth: '100%',
-  },
-  fileChipName: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#1A3A36',
-    flexShrink: 1,
-  },
-  fileChipSize: {
-    fontSize: 11,
-    color: '#687076',
-  },
   docStatusRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -838,13 +802,13 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   attachedActions: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     alignItems: 'center',
     gap: 6,
   },
   iconActionButton: {
-    width: 36,
-    height: 36,
+    width: 34,
+    height: 34,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: '#B9DCD7',
