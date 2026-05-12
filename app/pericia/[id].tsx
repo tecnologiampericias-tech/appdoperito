@@ -1,65 +1,39 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Platform,
-} from 'react-native';
-import { StatusBar } from 'expo-status-bar';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
-
-type PassoState = 'done' | 'current' | 'pending';
-
-type Passo = {
-  numero: number;
-  titulo: string;
-  icon: React.ReactNode;
-  state: PassoState;
-};
-
-const PASSOS: Passo[] = [
-  {
-    numero: 1,
-    titulo: 'Validar Identidade',
-    icon: <MaterialCommunityIcons name="account-search-outline" size={22} color="#2A8A7D" />,
-    state: 'done',
-  },
-  {
-    numero: 2,
-    titulo: 'Coletar Anamnese',
-    icon: <MaterialCommunityIcons name="clipboard-text-outline" size={22} color="#2A8A7D" />,
-    state: 'current',
-  },
-  {
-    numero: 3,
-    titulo: 'Emitir Parecer',
-    icon: <MaterialCommunityIcons name="file-document-edit-outline" size={22} color="#A0AEB8" />,
-    state: 'pending',
-  },
-];
+import { colors, fontWeight, layout, radius, shadow, spacing } from '@/constants/theme';
+import {
+  Button,
+  HeaderBar,
+  IconBadge,
+  Screen,
+  StatusBadge,
+} from '@/components/ui';
+import { PASSOS_PERICIA } from '@/data/pericia';
+import type { Passo } from '@/types/domain';
 
 export default function PericiaDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
 
   return (
-    <View style={styles.container}>
-      <StatusBar style="dark" />
-
-      <View style={styles.topBar}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.iconBtn} activeOpacity={0.7}>
-          <Ionicons name="close" size={22} color="#1A3A36" />
-        </TouchableOpacity>
-        <View style={{ alignItems: 'center' }}>
-          <Text style={styles.topSubtitle}>CENTRAL DE AÇÃO</Text>
-          <Text style={styles.topTitle}>Caso {id ?? '#4925-23'}</Text>
-        </View>
-        <TouchableOpacity style={styles.iconBtn} activeOpacity={0.7}>
-          <Ionicons name="share-outline" size={20} color="#1A3A36" />
-        </TouchableOpacity>
-      </View>
+    <Screen background={colors.bgGreyLight}>
+      <HeaderBar
+        variant="compact"
+        onBack={() => router.back()}
+        backIcon="close"
+        centerSlot={
+          <View style={styles.headerCenter}>
+            <Text style={styles.topSubtitle}>CENTRAL DE AÇÃO</Text>
+            <Text style={styles.topTitle}>Caso {id ?? '#4925-23'}</Text>
+          </View>
+        }
+        rightSlot={
+          <View style={styles.iconBtn}>
+            <Ionicons name="share-outline" size={20} color={colors.text} />
+          </View>
+        }
+      />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -67,9 +41,12 @@ export default function PericiaDetailScreen() {
       >
         <View style={styles.heroCard}>
           <View style={styles.heroRow}>
-            <View style={styles.statusBadge}>
-              <Text style={styles.statusBadgeText}>AGUARDANDO INÍCIO</Text>
-            </View>
+            <StatusBadge
+              label="AGUARDANDO INÍCIO"
+              bg={colors.onPrimary18}
+              color={colors.white}
+              size="md"
+            />
             <Text style={styles.heroTime}>Hoje, 09:30</Text>
           </View>
           <Text style={styles.heroName}>Beatriz Mendonça</Text>
@@ -78,135 +55,126 @@ export default function PericiaDetailScreen() {
 
         <Text style={styles.sectionLabel}>ROTEIRO DA PERÍCIA</Text>
 
-        <View style={{ gap: 10 }}>
-          {PASSOS.map((passo) => {
-            const isCurrent = passo.state === 'current';
-            const isDone = passo.state === 'done';
-            const isPending = passo.state === 'pending';
-
-            return (
-              <View
-                key={passo.numero}
-                style={[styles.stepCard, isCurrent && styles.stepCardCurrent]}
-              >
-                <View
-                  style={[
-                    styles.stepIcon,
-                    isPending && styles.stepIconPending,
-                  ]}
-                >
-                  {passo.icon}
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text
-                    style={[
-                      styles.stepLabel,
-                      isCurrent && styles.stepLabelCurrent,
-                      isPending && styles.stepLabelPending,
-                    ]}
-                  >
-                    {isCurrent ? 'ATUAL' : `PASSO ${passo.numero}`}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.stepTitle,
-                      isPending && styles.stepTitlePending,
-                    ]}
-                  >
-                    {passo.titulo}
-                  </Text>
-                </View>
-                {isDone && (
-                  <View style={styles.checkCircle}>
-                    <Ionicons name="checkmark" size={16} color="#FFFFFF" />
-                  </View>
-                )}
-              </View>
-            );
-          })}
+        <View style={styles.stepList}>
+          {PASSOS_PERICIA.map((passo) => (
+            <StepCard key={passo.numero} passo={passo} />
+          ))}
         </View>
 
         <View style={styles.infoCard}>
-          <View style={styles.infoItem}>
-            <Text style={styles.infoLabel}>DOCUMENTOS</Text>
-            <View style={styles.infoValueRow}>
-              <Ionicons name="attach" size={15} color="#4AAFA6" />
-              <Text style={styles.infoValue}>4 anexos</Text>
-            </View>
-          </View>
+          <InfoCol label="DOCUMENTOS" icon="attach" value="4 anexos" />
           <View style={styles.infoDivider} />
-          <View style={styles.infoItem}>
-            <Text style={styles.infoLabel}>LOCALIZAÇÃO</Text>
-            <View style={styles.infoValueRow}>
-              <Ionicons name="location-outline" size={15} color="#4AAFA6" />
-              <Text style={styles.infoValue}>Consultório 04</Text>
-            </View>
-          </View>
+          <InfoCol label="LOCALIZAÇÃO" icon="location-outline" value="Consultório 04" />
         </View>
       </ScrollView>
 
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.primaryButton} activeOpacity={0.88}>
-          <Text style={styles.primaryButtonText}>INICIAR PERÍCIA</Text>
-          <Ionicons name="play" size={14} color="#FFFFFF" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.secondaryAction} activeOpacity={0.7}>
+        <Button
+          label="INICIAR PERÍCIA"
+          variant="primaryDark"
+          iconRight={<Ionicons name="play" size={14} color={colors.white} />}
+          textStyle={styles.primaryBtnText}
+        />
+        <View style={styles.secondaryAction}>
           <Text style={styles.secondaryActionText}>REAGENDAR AVALIAÇÃO</Text>
-        </TouchableOpacity>
+        </View>
+      </View>
+    </Screen>
+  );
+}
+
+function StepCard({ passo }: { passo: Passo }) {
+  const isCurrent = passo.state === 'current';
+  const isDone = passo.state === 'done';
+  const isPending = passo.state === 'pending';
+
+  return (
+    <View style={[styles.stepCard, isCurrent && styles.stepCardCurrent]}>
+      <IconBadge size="lg" tone={isPending ? 'grey' : 'mint'}>
+        <MaterialCommunityIcons
+          name={passo.icon}
+          size={22}
+          color={isPending ? colors.textPlaceholder : colors.primaryDark}
+        />
+      </IconBadge>
+      <View style={styles.stepTextWrap}>
+        <Text
+          style={[
+            styles.stepLabel,
+            isCurrent && styles.stepLabelCurrent,
+            isPending && styles.stepLabelPending,
+          ]}
+        >
+          {isCurrent ? 'ATUAL' : `PASSO ${passo.numero}`}
+        </Text>
+        <Text style={[styles.stepTitle, isPending && styles.stepTitlePending]}>
+          {passo.titulo}
+        </Text>
+      </View>
+      {isDone && (
+        <View style={styles.checkCircle}>
+          <Ionicons name="checkmark" size={16} color={colors.white} />
+        </View>
+      )}
+    </View>
+  );
+}
+
+function InfoCol({
+  label,
+  icon,
+  value,
+}: {
+  label: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  value: string;
+}) {
+  return (
+    <View style={styles.infoCol}>
+      <Text style={styles.infoLabel}>{label}</Text>
+      <View style={styles.infoValueRow}>
+        <Ionicons name={icon} size={15} color={colors.primary} />
+        <Text style={styles.infoValue}>{value}</Text>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F5F7F8',
-  },
-  topBar: {
-    flexDirection: 'row',
+  headerCenter: {
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-    backgroundColor: '#F5F7F8',
+  },
+  topSubtitle: {
+    fontSize: 10,
+    fontWeight: fontWeight.bold,
+    color: colors.textSubtle,
+    letterSpacing: 1,
+  },
+  topTitle: {
+    fontSize: 14,
+    fontWeight: fontWeight.black,
+    color: colors.primaryDark,
+    marginTop: 2,
   },
   iconBtn: {
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: '#EEF1F3',
+    backgroundColor: colors.bgBlueGrey,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  topSubtitle: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#8A9BA5',
-    letterSpacing: 1,
-  },
-  topTitle: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#2A8A7D',
-    marginTop: 2,
-  },
   scrollContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
+    paddingHorizontal: spacing.xl,
+    paddingBottom: spacing.xl,
   },
   heroCard: {
-    backgroundColor: '#2A8A7D',
-    borderRadius: 20,
-    padding: 20,
-    marginTop: 4,
+    backgroundColor: colors.primaryDark,
+    borderRadius: radius.modal,
+    padding: spacing.xl,
+    marginTop: spacing.xs,
     marginBottom: 22,
-    shadowColor: '#2A8A7D',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.25,
-    shadowRadius: 16,
-    elevation: 6,
+    ...shadow.primaryDark,
   },
   heroRow: {
     flexDirection: 'row',
@@ -214,28 +182,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 14,
   },
-  statusBadge: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 12,
-  },
-  statusBadgeText: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    letterSpacing: 0.7,
-  },
   heroTime: {
     fontSize: 13,
     color: 'rgba(255,255,255,0.9)',
-    fontWeight: '600',
+    fontWeight: fontWeight.semibold,
   },
   heroName: {
     fontSize: 26,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    marginBottom: 4,
+    fontWeight: fontWeight.black,
+    color: colors.white,
+    marginBottom: spacing.xs,
   },
   heroMeta: {
     fontSize: 14,
@@ -243,95 +199,72 @@ const styles = StyleSheet.create({
   },
   sectionLabel: {
     fontSize: 11,
-    fontWeight: '700',
-    color: '#8A9BA5',
+    fontWeight: fontWeight.bold,
+    color: colors.textSubtle,
     letterSpacing: 1,
     marginBottom: 10,
   },
+  stepList: { gap: 10 },
   stepCard: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    backgroundColor: colors.surface,
+    borderRadius: radius.xxl,
     padding: 14,
     borderWidth: 1.5,
     borderColor: 'transparent',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 1,
+    ...shadow.soft,
   },
   stepCardCurrent: {
-    borderColor: '#2A8A7D',
+    borderColor: colors.primaryDark,
   },
-  stepIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: '#E8F5F3',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stepIconPending: {
-    backgroundColor: '#EEF1F3',
-  },
+  stepTextWrap: { flex: 1 },
   stepLabel: {
     fontSize: 10,
-    fontWeight: '800',
-    color: '#8A9BA5',
+    fontWeight: fontWeight.black,
+    color: colors.textSubtle,
     letterSpacing: 0.8,
     marginBottom: 3,
   },
-  stepLabelCurrent: {
-    color: '#2A8A7D',
-  },
-  stepLabelPending: {
-    color: '#A0AEB8',
-  },
+  stepLabelCurrent: { color: colors.primaryDark },
+  stepLabelPending: { color: colors.textPlaceholder },
   stepTitle: {
     fontSize: 15,
-    fontWeight: '800',
-    color: '#1A3A36',
+    fontWeight: fontWeight.black,
+    color: colors.text,
   },
-  stepTitlePending: {
-    color: '#8A9BA5',
-  },
+  stepTitlePending: { color: colors.textSubtle },
   checkCircle: {
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#A0AEB8',
+    backgroundColor: colors.textPlaceholder,
     alignItems: 'center',
     justifyContent: 'center',
   },
   infoCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    paddingVertical: 16,
-    marginTop: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 1,
+    backgroundColor: colors.surface,
+    borderRadius: radius.xxl,
+    paddingVertical: spacing.lg,
+    marginTop: spacing.lg,
+    ...shadow.soft,
   },
-  infoItem: {
+  infoCol: {
     flex: 1,
     paddingHorizontal: 18,
   },
   infoDivider: {
     width: 1,
     height: 32,
-    backgroundColor: '#EEF1F3',
+    backgroundColor: colors.bgBlueGrey,
   },
   infoLabel: {
     fontSize: 10,
-    fontWeight: '700',
-    color: '#8A9BA5',
+    fontWeight: fontWeight.bold,
+    color: colors.textSubtle,
     letterSpacing: 0.8,
     marginBottom: 6,
   },
@@ -342,45 +275,29 @@ const styles = StyleSheet.create({
   },
   infoValue: {
     fontSize: 14,
-    fontWeight: '700',
-    color: '#1A3A36',
+    fontWeight: fontWeight.bold,
+    color: colors.text,
   },
   footer: {
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: Platform.OS === 'ios' ? 28 : 18,
-    backgroundColor: '#F5F7F8',
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.md,
+    paddingBottom: layout.iosBottomSafeSm,
+    backgroundColor: colors.bgGreyLight,
     borderTopWidth: 1,
-    borderTopColor: '#EEF1F3',
+    borderTopColor: colors.bgBlueGrey,
   },
-  primaryButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    backgroundColor: '#2A8A7D',
-    borderRadius: 16,
-    height: 54,
-    shadowColor: '#2A8A7D',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 5,
-  },
-  primaryButtonText: {
+  primaryBtnText: {
     fontSize: 15,
-    fontWeight: '800',
-    color: '#FFFFFF',
     letterSpacing: 1,
   },
   secondaryAction: {
     alignItems: 'center',
-    paddingTop: 16,
+    paddingTop: spacing.lg,
   },
   secondaryActionText: {
     fontSize: 12,
-    fontWeight: '800',
-    color: '#8A9BA5',
+    fontWeight: fontWeight.black,
+    color: colors.textSubtle,
     letterSpacing: 1,
   },
 });

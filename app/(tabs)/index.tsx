@@ -1,328 +1,210 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Platform,
-} from 'react-native';
-import { StatusBar } from 'expo-status-bar';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { colors, fontWeight, radius, shadow, spacing } from '@/constants/theme';
+import {
+  Button,
+  Card,
+  IconBadge,
+  Screen,
+  SectionHeader,
+  StatusBadge,
+  TopBar,
+} from '@/components/ui';
 
 export default function HomeScreen() {
   return (
-    <View style={styles.container}>
-      <StatusBar style="dark" />
-
-      <View style={styles.topBar}>
-        <View style={styles.topBarLeft}>
-          <View style={styles.brandIcon}>
-            <Ionicons name="medical" size={16} color="#FFFFFF" />
-          </View>
-          <Text style={styles.brandText}>Expertise Digital</Text>
-        </View>
-        <TouchableOpacity style={styles.bellButton} activeOpacity={0.7}>
-          <Ionicons name="notifications-outline" size={22} color="#2D3436" />
-          <View style={styles.bellDot} />
-        </TouchableOpacity>
-      </View>
+    <Screen background={colors.bgGreyLight}>
+      <TopBar background={colors.bgGreyLight} />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.heroCard}>
-          <View style={styles.heroBadge}>
-            <Text style={styles.heroBadgeText}>PAINEL DO PERITO</Text>
-          </View>
+          <StatusBadge
+            label="PAINEL DO PERITO"
+            bg={colors.onPrimary18}
+            color={colors.white}
+            size="md"
+          />
           <Text style={styles.heroTitle}>Olá, Dr. Ricardo</Text>
-          <Text style={styles.heroSubtitle}>
-            Você tem 4 novas nomeações pendentes.
-          </Text>
+          <Text style={styles.heroSubtitle}>Você tem 4 novas nomeações pendentes.</Text>
 
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.statsRow}
           >
-            <View style={styles.statCard}>
-              <Text style={styles.statValue}>12</Text>
-              <Text style={styles.statLabel}>LAUDOS</Text>
-              <Text style={styles.statLabelSmall}>ENTREGUES</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statValue}>08</Text>
-              <Text style={styles.statLabel}>AGENDADOS</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statValue}>03</Text>
-              <Text style={styles.statLabel}>PENDENTES</Text>
-            </View>
+            <Stat value="12" label="LAUDOS" labelSm="ENTREGUES" />
+            <Stat value="08" label="AGENDADOS" />
+            <Stat value="03" label="PENDENTES" />
           </ScrollView>
         </View>
 
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Próxima Perícia</Text>
-          <TouchableOpacity>
-            <Text style={styles.sectionAction}>Ver Agenda</Text>
-          </TouchableOpacity>
-        </View>
+        <SectionHeader title="Próxima Perícia" actionLabel="Ver Agenda" />
 
-        <View style={styles.caseCard}>
+        <Card>
           <View style={styles.caseHeader}>
-            <View style={styles.caseIcon}>
-              <MaterialCommunityIcons name="briefcase-outline" size={22} color="#4AAFA6" />
-            </View>
-            <View style={{ flex: 1 }}>
+            <IconBadge size="lg">
+              <MaterialCommunityIcons name="briefcase-outline" size={22} color={colors.primary} />
+            </IconBadge>
+            <View style={styles.caseHeaderText}>
               <Text style={styles.caseNumber}>Caso #4829-23</Text>
               <Text style={styles.casePatient}>Paciente: Maria Silva Santos</Text>
             </View>
-            <View style={styles.urgentBadge}>
-              <Text style={styles.urgentBadgeText}>URGENTE</Text>
-            </View>
+            <StatusBadge label="URGENTE" tone="success" />
           </View>
 
           <View style={styles.infoRow}>
-            <View style={styles.infoBox}>
-              <Text style={styles.infoLabel}>DATA E HORA</Text>
-              <View style={styles.infoValueRow}>
-                <Ionicons name="calendar-outline" size={15} color="#4AAFA6" />
-                <Text style={styles.infoValue}>Amanhã, 09:30</Text>
-              </View>
-            </View>
-            <View style={styles.infoBox}>
-              <Text style={styles.infoLabel}>LOCALIZAÇÃO</Text>
-              <View style={styles.infoValueRow}>
-                <Ionicons name="location-outline" size={15} color="#4AAFA6" />
-                <Text style={styles.infoValue}>Clínica Central</Text>
-              </View>
-            </View>
+            <InfoBox label="DATA E HORA" icon="calendar-outline" value="Amanhã, 09:30" />
+            <InfoBox label="LOCALIZAÇÃO" icon="location-outline" value="Clínica Central" />
           </View>
 
           <Text style={styles.caseDescription}>
-            Perícia solicitada pela 4ª Vara Federal para avaliação de
-            incapacidade laborativa temporária (Ortopedia).
+            Perícia solicitada pela 4ª Vara Federal para avaliação de incapacidade laborativa
+            temporária (Ortopedia).
           </Text>
 
-          <TouchableOpacity style={styles.caseButton} activeOpacity={0.85}>
-            <Text style={styles.caseButtonText}>Ver Detalhes do Processo</Text>
-          </TouchableOpacity>
-        </View>
+          <Button label="Ver Detalhes do Processo" size="md" />
+        </Card>
 
-        <Text style={styles.sectionTitleSolo}>Ações Rápidas</Text>
+        <Text style={styles.sectionSolo}>Ações Rápidas</Text>
 
         <View style={styles.quickRow}>
-          <TouchableOpacity style={styles.quickCard} activeOpacity={0.85}>
-            <View style={styles.quickIcon}>
-              <MaterialCommunityIcons name="file-document-edit-outline" size={22} color="#4AAFA6" />
-            </View>
-            <Text style={styles.quickTitle}>Novo Laudo</Text>
-            <Text style={styles.quickSubtitle}>Iniciar preenchimento</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.quickCard} activeOpacity={0.85}>
-            <View style={styles.quickIcon}>
-              <MaterialCommunityIcons name="cloud-upload-outline" size={22} color="#4AAFA6" />
-            </View>
-            <Text style={styles.quickTitle}>Subir Exames</Text>
-            <Text style={styles.quickSubtitle}>PDF, JPG ou PNG</Text>
-          </TouchableOpacity>
+          <QuickAction icon="file-document-edit-outline" title="Novo Laudo" subtitle="Iniciar preenchimento" />
+          <QuickAction icon="cloud-upload-outline" title="Subir Exames" subtitle="PDF, JPG ou PNG" />
         </View>
       </ScrollView>
+    </Screen>
+  );
+}
+
+function Stat({ value, label, labelSm }: { value: string; label: string; labelSm?: string }) {
+  return (
+    <View style={styles.statCard}>
+      <Text style={styles.statValue}>{value}</Text>
+      <Text style={styles.statLabel}>{label}</Text>
+      {labelSm ? <Text style={styles.statLabel}>{labelSm}</Text> : null}
     </View>
   );
 }
 
+function InfoBox({
+  label,
+  icon,
+  value,
+}: {
+  label: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  value: string;
+}) {
+  return (
+    <View style={styles.infoBox}>
+      <Text style={styles.infoLabel}>{label}</Text>
+      <View style={styles.infoValueRow}>
+        <Ionicons name={icon} size={15} color={colors.primary} />
+        <Text style={styles.infoValue}>{value}</Text>
+      </View>
+    </View>
+  );
+}
+
+function QuickAction({
+  icon,
+  title,
+  subtitle,
+}: {
+  icon: keyof typeof MaterialCommunityIcons.glyphMap;
+  title: string;
+  subtitle: string;
+}) {
+  return (
+    <TouchableOpacity style={styles.quickCard} activeOpacity={0.85}>
+      <IconBadge size="md" style={styles.quickIcon}>
+        <MaterialCommunityIcons name={icon} size={22} color={colors.primary} />
+      </IconBadge>
+      <Text style={styles.quickTitle}>{title}</Text>
+      <Text style={styles.quickSubtitle}>{subtitle}</Text>
+    </TouchableOpacity>
+  );
+}
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F5F7F8',
-  },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
-    paddingHorizontal: 20,
-    paddingBottom: 12,
-    backgroundColor: '#F5F7F8',
-  },
-  topBarLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  brandIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    backgroundColor: '#4AAFA6',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  brandText: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#1A3A36',
-  },
-  bellButton: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  bellDot: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#E74C3C',
-    borderWidth: 1.5,
-    borderColor: '#F5F7F8',
-  },
   scrollContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 32,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.huge,
   },
   heroCard: {
-    backgroundColor: '#4AAFA6',
-    borderRadius: 20,
-    padding: 20,
-    shadowColor: '#4AAFA6',
+    backgroundColor: colors.primary,
+    borderRadius: radius.modal,
+    padding: spacing.xl,
+    shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.2,
     shadowRadius: 16,
     elevation: 6,
   },
-  heroBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    borderRadius: 14,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    marginBottom: 12,
-  },
-  heroBadgeText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    letterSpacing: 1,
-  },
   heroTitle: {
     fontSize: 26,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    marginBottom: 4,
+    fontWeight: fontWeight.black,
+    color: colors.white,
+    marginTop: spacing.md,
+    marginBottom: spacing.xs,
   },
   heroSubtitle: {
     fontSize: 14,
-    color: 'rgba(255,255,255,0.85)',
+    color: colors.onPrimary85,
     marginBottom: 18,
   },
   statsRow: {
     gap: 10,
-    paddingRight: 8,
+    paddingRight: spacing.sm,
   },
   statCard: {
-    backgroundColor: 'rgba(255,255,255,0.14)',
-    borderRadius: 14,
-    paddingVertical: 14,
+    backgroundColor: colors.onPrimary14,
+    borderRadius: radius.xl,
+    paddingVertical: spacing.md + 2,
     paddingHorizontal: 18,
     minWidth: 96,
     alignItems: 'flex-start',
   },
   statValue: {
     fontSize: 24,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    marginBottom: 4,
+    fontWeight: fontWeight.black,
+    color: colors.white,
+    marginBottom: spacing.xs,
   },
   statLabel: {
     fontSize: 10,
-    fontWeight: '700',
+    fontWeight: fontWeight.bold,
     color: 'rgba(255,255,255,0.9)',
     letterSpacing: 0.8,
   },
-  statLabelSmall: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: 'rgba(255,255,255,0.9)',
-    letterSpacing: 0.8,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 24,
-    marginBottom: 12,
-    paddingHorizontal: 4,
-  },
-  sectionTitle: {
+  sectionSolo: {
     fontSize: 18,
-    fontWeight: '800',
-    color: '#1A3A36',
-  },
-  sectionAction: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#4AAFA6',
-  },
-  sectionTitleSolo: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#1A3A36',
-    marginTop: 24,
-    marginBottom: 12,
-    paddingHorizontal: 4,
-  },
-  caseCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 18,
-    padding: 18,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 3,
+    fontWeight: fontWeight.black,
+    color: colors.text,
+    marginTop: spacing.xxl,
+    marginBottom: spacing.md,
+    paddingHorizontal: spacing.xs,
   },
   caseHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: spacing.md,
     marginBottom: 14,
   },
-  caseIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: '#E8F5F3',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  caseHeaderText: { flex: 1 },
   caseNumber: {
     fontSize: 15,
-    fontWeight: '800',
-    color: '#1A3A36',
+    fontWeight: fontWeight.black,
+    color: colors.text,
   },
   casePatient: {
     fontSize: 13,
-    color: '#687076',
+    color: colors.textMuted,
     marginTop: 2,
-  },
-  urgentBadge: {
-    backgroundColor: '#D4F1EC',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 10,
-  },
-  urgentBadgeText: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#2A8A7D',
-    letterSpacing: 0.6,
   },
   infoRow: {
     flexDirection: 'row',
@@ -331,14 +213,14 @@ const styles = StyleSheet.create({
   },
   infoBox: {
     flex: 1,
-    backgroundColor: '#F7F9FA',
-    borderRadius: 12,
-    padding: 12,
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: radius.lg,
+    padding: spacing.md,
   },
   infoLabel: {
     fontSize: 10,
-    fontWeight: '700',
-    color: '#8A9BA5',
+    fontWeight: fontWeight.bold,
+    color: colors.textSubtle,
     letterSpacing: 0.7,
     marginBottom: 6,
   },
@@ -349,59 +231,37 @@ const styles = StyleSheet.create({
   },
   infoValue: {
     fontSize: 13,
-    fontWeight: '600',
-    color: '#1A3A36',
+    fontWeight: fontWeight.semibold,
+    color: colors.text,
   },
   caseDescription: {
     fontSize: 13,
-    color: '#687076',
+    color: colors.textMuted,
     lineHeight: 19,
-    marginBottom: 16,
-  },
-  caseButton: {
-    backgroundColor: '#4AAFA6',
-    borderRadius: 14,
-    height: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  caseButtonText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#FFFFFF',
+    marginBottom: spacing.lg,
   },
   quickRow: {
     flexDirection: 'row',
-    gap: 12,
+    gap: spacing.md,
   },
   quickCard: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 2,
+    backgroundColor: colors.surface,
+    borderRadius: radius.xxl,
+    padding: spacing.lg,
+    ...shadow.card,
   },
   quickIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: '#E8F5F3',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
+    marginBottom: spacing.md,
   },
   quickTitle: {
     fontSize: 15,
-    fontWeight: '700',
-    color: '#1A3A36',
+    fontWeight: fontWeight.bold,
+    color: colors.text,
     marginBottom: 3,
   },
   quickSubtitle: {
     fontSize: 12,
-    color: '#8A9BA5',
+    color: colors.textSubtle,
   },
 });

@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  Platform,
   KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
+import { colors, fontWeight, layout, radius, shadow, spacing } from '@/constants/theme';
+import { Button, HeaderBar, Screen, StatusBadge } from '@/components/ui';
 
 type SectionKey = 'achados' | 'conclusao' | 'historico';
 
@@ -28,22 +29,21 @@ export default function LaudoDetailScreen() {
     setOpen((prev) => ({ ...prev, [key]: !prev[key] }));
 
   return (
-    <View style={styles.container}>
-      <StatusBar style="dark" />
-
-      <View style={styles.topBar}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.iconBtn} activeOpacity={0.7}>
-          <Ionicons name="arrow-back" size={22} color="#1A3A36" />
-        </TouchableOpacity>
-        <Text style={styles.topTitle}>Laudo {id ?? '#4829-23'}</Text>
-        <TouchableOpacity style={styles.iconBtn} activeOpacity={0.7}>
-          <Ionicons name="share-outline" size={22} color="#1A3A36" />
-        </TouchableOpacity>
-      </View>
+    <Screen background={colors.bgGreyLight}>
+      <HeaderBar
+        variant="compact"
+        onBack={() => router.back()}
+        title={`Laudo ${id ?? '#4829-23'}`}
+        rightSlot={
+          <TouchableOpacity activeOpacity={0.7}>
+            <Ionicons name="share-outline" size={22} color={colors.text} />
+          </TouchableOpacity>
+        }
+      />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={{ flex: 1 }}
+        style={styles.flex}
       >
         <ScrollView
           contentContainerStyle={styles.scrollContent}
@@ -51,71 +51,65 @@ export default function LaudoDetailScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.metaRow}>
-            <View style={styles.statusBadge}>
-              <Text style={styles.statusBadgeText}>EM REVISÃO</Text>
-            </View>
+            <StatusBadge label="EM REVISÃO" tone="info" />
             <Text style={styles.metaDate}>Emitido em 12 Out 2023</Text>
           </View>
 
           <Text style={styles.patientName}>Maria Silva Santos</Text>
           <View style={styles.examRow}>
-            <MaterialCommunityIcons name="head-snowflake-outline" size={16} color="#4AAFA6" />
+            <MaterialCommunityIcons name="head-snowflake-outline" size={16} color={colors.primary} />
             <Text style={styles.examText}>Ressonância Magnética de Crânio</Text>
           </View>
 
-          <TouchableOpacity style={styles.approveButton} activeOpacity={0.88}>
-            <Ionicons name="checkmark-circle" size={20} color="#FFFFFF" />
-            <Text style={styles.approveButtonText}>Aprovar Laudo</Text>
-          </TouchableOpacity>
+          <Button
+            label="Aprovar Laudo"
+            variant="primaryDark"
+            iconLeft={<Ionicons name="checkmark-circle" size={20} color={colors.white} />}
+            textStyle={styles.approveText}
+          />
 
           <View style={styles.secondaryRow}>
-            <TouchableOpacity style={styles.secondaryButton} activeOpacity={0.85}>
-              <MaterialCommunityIcons name="file-document-edit-outline" size={22} color="#1A3A36" />
-              <Text style={styles.secondaryButtonText}>Revisar</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.secondaryButton} activeOpacity={0.85}>
-              <MaterialCommunityIcons name="file-pdf-box" size={22} color="#1A3A36" />
-              <Text style={styles.secondaryButtonText}>Baixar PDF</Text>
-            </TouchableOpacity>
+            <SecondaryAction icon="file-document-edit-outline" label="Revisar" />
+            <SecondaryAction icon="file-pdf-box" label="Baixar PDF" />
           </View>
 
           <CollapsibleSection
-            icon={<Ionicons name="eye-outline" size={18} color="#1A3A36" />}
+            icon={<Ionicons name="eye-outline" size={18} color={colors.text} />}
             title="Achados Detalhados"
             open={open.achados}
             onToggle={() => toggle('achados')}
           >
             <Text style={styles.paragraph}>
-              Presença de áreas com sinal hiperintenso em T2 e FLAIR na substância
-              branca periventricular, compatível com microangiopatia degenerativa.
+              Presença de áreas com sinal hiperintenso em T2 e FLAIR na substância branca
+              periventricular, compatível com microangiopatia degenerativa.
             </Text>
             <Text style={styles.paragraph}>
-              Sistema ventricular de forma, volume e topografia normais. Estruturas
-              da linha média em posição habitual.
+              Sistema ventricular de forma, volume e topografia normais. Estruturas da linha
+              média em posição habitual.
             </Text>
           </CollapsibleSection>
 
           <CollapsibleSection
-            icon={<MaterialCommunityIcons name="clipboard-pulse-outline" size={18} color="#1A3A36" />}
+            icon={<MaterialCommunityIcons name="clipboard-pulse-outline" size={18} color={colors.text} />}
             title="Conclusão Diagnóstica"
             open={open.conclusao}
             onToggle={() => toggle('conclusao')}
           >
             <Text style={styles.paragraph}>
-              Exame apresentando sinais de leucoencefalopatia de provável etiologia
-              vascular grau II de Fazekas.
+              Exame apresentando sinais de leucoencefalopatia de provável etiologia vascular grau
+              II de Fazekas.
             </Text>
           </CollapsibleSection>
 
           <CollapsibleSection
-            icon={<Ionicons name="time-outline" size={18} color="#1A3A36" />}
+            icon={<Ionicons name="time-outline" size={18} color={colors.text} />}
             title="Histórico do Paciente"
             open={open.historico}
             onToggle={() => toggle('historico')}
           >
             <Text style={styles.paragraph}>
-              Paciente com histórico de hipertensão arterial sistêmica em uso regular
-              de losartana. Sem outras comorbidades relevantes.
+              Paciente com histórico de hipertensão arterial sistêmica em uso regular de
+              losartana. Sem outras comorbidades relevantes.
             </Text>
           </CollapsibleSection>
         </ScrollView>
@@ -124,16 +118,31 @@ export default function LaudoDetailScreen() {
           <TextInput
             style={styles.noteInput}
             placeholder="Adicionar nota rápida para revisão..."
-            placeholderTextColor="#A0AEB8"
+            placeholderTextColor={colors.textPlaceholder}
             value={note}
             onChangeText={setNote}
           />
           <TouchableOpacity style={styles.sendButton} activeOpacity={0.85}>
-            <Ionicons name="send" size={18} color="#FFFFFF" />
+            <Ionicons name="send" size={18} color={colors.white} />
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
-    </View>
+    </Screen>
+  );
+}
+
+function SecondaryAction({
+  icon,
+  label,
+}: {
+  icon: keyof typeof MaterialCommunityIcons.glyphMap;
+  label: string;
+}) {
+  return (
+    <TouchableOpacity style={styles.secondaryButton} activeOpacity={0.85}>
+      <MaterialCommunityIcons name={icon} size={22} color={colors.text} />
+      <Text style={styles.secondaryButtonText}>{label}</Text>
+    </TouchableOpacity>
   );
 }
 
@@ -160,7 +169,7 @@ function CollapsibleSection({
         <Ionicons
           name={open ? 'chevron-up' : 'chevron-down'}
           size={18}
-          color="#687076"
+          color={colors.textMuted}
         />
       </TouchableOpacity>
       {open && <View style={styles.sectionBody}>{children}</View>}
@@ -169,62 +178,27 @@ function CollapsibleSection({
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F5F7F8',
-  },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
-    paddingHorizontal: 12,
-    paddingBottom: 10,
-    backgroundColor: '#F5F7F8',
-  },
-  iconBtn: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  topTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#1A3A36',
-  },
+  flex: { flex: 1 },
   scrollContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 24,
+    paddingHorizontal: spacing.xl,
+    paddingBottom: spacing.xxl,
   },
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
     marginTop: 6,
-    marginBottom: 8,
-  },
-  statusBadge: {
-    backgroundColor: '#D4F1EC',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 10,
-  },
-  statusBadgeText: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#2A8A7D',
-    letterSpacing: 0.6,
+    marginBottom: spacing.sm,
   },
   metaDate: {
     fontSize: 13,
-    color: '#687076',
+    color: colors.textMuted,
   },
   patientName: {
     fontSize: 26,
-    fontWeight: '800',
-    color: '#1A3A36',
-    marginBottom: 4,
+    fontWeight: fontWeight.black,
+    color: colors.text,
+    marginBottom: spacing.xs,
   },
   examRow: {
     flexDirection: 'row',
@@ -234,111 +208,92 @@ const styles = StyleSheet.create({
   },
   examText: {
     fontSize: 14,
-    color: '#687076',
-    fontWeight: '500',
+    color: colors.textMuted,
+    fontWeight: fontWeight.medium,
   },
-  approveButton: {
-    backgroundColor: '#2A8A7D',
-    borderRadius: 16,
-    height: 54,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    shadowColor: '#2A8A7D',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 5,
-  },
-  approveButtonText: {
+  approveText: {
     fontSize: 16,
-    fontWeight: '700',
-    color: '#FFFFFF',
+    fontWeight: fontWeight.bold,
   },
   secondaryRow: {
     flexDirection: 'row',
-    gap: 12,
-    marginTop: 12,
+    gap: spacing.md,
+    marginTop: spacing.md,
     marginBottom: 18,
   },
   secondaryButton: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
+    backgroundColor: colors.surface,
+    borderRadius: radius.xl,
     paddingVertical: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
+    gap: spacing.xs,
+    ...shadow.card,
   },
   secondaryButtonText: {
     fontSize: 13,
-    fontWeight: '700',
-    color: '#1A3A36',
+    fontWeight: fontWeight.bold,
+    color: colors.text,
   },
   section: {
-    backgroundColor: '#EEF1F3',
-    borderRadius: 16,
-    marginBottom: 12,
+    backgroundColor: colors.bgBlueGrey,
+    borderRadius: radius.xxl,
+    marginBottom: spacing.md,
     overflow: 'hidden',
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
+    paddingHorizontal: spacing.lg,
     paddingVertical: 14,
   },
   sectionHeaderLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: spacing.sm,
   },
   sectionTitle: {
     fontSize: 15,
-    fontWeight: '800',
-    color: '#1A3A36',
+    fontWeight: fontWeight.black,
+    color: colors.text,
   },
   sectionBody: {
-    paddingHorizontal: 16,
+    paddingHorizontal: spacing.lg,
     paddingBottom: 14,
   },
   paragraph: {
     fontSize: 13,
-    color: '#5A6670',
+    color: colors.textSoft,
     lineHeight: 20,
-    marginBottom: 8,
+    marginBottom: spacing.sm,
   },
   noteBar: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    paddingBottom: Platform.OS === 'ios' ? 28 : 14,
-    backgroundColor: '#FFFFFF',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    paddingBottom: layout.iosBottomSafeSm,
+    backgroundColor: colors.surface,
     borderTopWidth: 1,
-    borderTopColor: '#EEF1F3',
+    borderTopColor: colors.bgBlueGrey,
   },
   noteInput: {
     flex: 1,
-    backgroundColor: '#F5F7F8',
+    backgroundColor: colors.bgGreyLight,
     borderRadius: 22,
-    paddingHorizontal: 16,
+    paddingHorizontal: spacing.lg,
     height: 44,
     fontSize: 14,
-    color: '#1A3A36',
+    color: colors.text,
   },
   sendButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#4AAFA6',
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
