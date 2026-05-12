@@ -22,7 +22,6 @@ type DocItem = {
   description: string;
   details: string;
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
-  requiresSignature?: boolean;
 };
 
 type AttachedFile = {
@@ -35,139 +34,138 @@ type AttachedFile = {
 
 const DOCUMENTS: DocItem[] = [
   {
-    id: 'rg',
-    name: 'Documento de Identidade (RG)',
-    description: 'Documento oficial com foto, frente e verso legíveis.',
+    id: 'doc-pessoal',
+    name: 'Documento Pessoal (RG ou CNH)',
+    description: 'RG ou CNH com foto e dados pessoais legíveis.',
     details:
-      'Envie uma foto nítida da frente e do verso do seu RG ou outro documento oficial com foto (CNH, passaporte). Aceitamos PDF, JPG ou PNG de até 10 MB por arquivo.',
+      'RG: número do registro (alguns já trazem o CPF), data de expedição, validade dentro de 10 anos contados desta data, nome completo, nome completo do pai e da mãe, órgão de expedição e foto.\n\nCNH: número do RG com órgão expedidor e CPF, data de validade, nome completo, nome do pai e da mãe, e foto.',
     icon: 'card-account-details-outline',
   },
   {
-    id: 'cpf',
-    name: 'CPF Regular',
-    description: 'Cadastro de Pessoa Física regularizado na Receita Federal.',
+    id: 'cedula-profissional',
+    name: 'Cédula Profissional (Órgão de Classe)',
+    description: 'CRM, CREA, CAU, COREN ou outro conselho aplicável.',
     details:
-      'Anexe o cartão CPF ou um comprovante de situação cadastral emitido em receita.fazenda.gov.br. A situação precisa estar "Regular".',
+      'Precisa conter foto, número da inscrição no órgão de classe, dados pessoais (RG, CPF, nome completo, nome dos pais) e a data de inscrição/expedição.',
+    icon: 'badge-account-horizontal-outline',
+  },
+  {
+    id: 'cpf',
+    name: 'Comprovante de CPF',
+    description: 'Emitido pela Receita Federal nos últimos 30 dias.',
+    details:
+      'Emitido obrigatoriamente junto à Receita Federal. Deve conter nome completo, número do CPF, data de nascimento, situação "REGULAR" e data de emissão dentro de 30 dias corridos.',
     icon: 'numeric',
+  },
+  {
+    id: 'titulo-eleitor',
+    name: 'Título de Eleitor',
+    description: 'Versão eletrônica ou física, com dados completos.',
+    details:
+      'Aceito tanto o eletrônico quanto o físico. Precisa conter nome completo, número do CPF, número do título, seção, zona e nome completo dos pais.',
+    icon: 'vote-outline',
   },
   {
     id: 'residencia',
     name: 'Comprovante de Residência',
-    description: 'Conta de luz, água, gás ou telefone dos últimos 90 dias.',
+    description: 'TJPR até 30 dias; demais tribunais até 3 meses.',
     details:
-      'O comprovante deve conter seu nome completo e endereço atual, com data de emissão dentro dos últimos 90 dias.',
+      'TJPR: atualizado até 30 dias e sem mostrar valores ou descrição de serviços. Demais tribunais: atualizado até 3 meses e sem qualquer rasura.\n\nDeve conter data de vencimento, nome completo do profissional, endereço completo, CEP e cidade/UF.',
     icon: 'home-outline',
   },
   {
-    id: 'bancarios',
-    name: 'Dados Bancários',
-    description: 'Conta corrente em seu nome para pagamento dos honorários.',
+    id: 'regularidade-financeira',
+    name: 'Regularidade Financeira',
+    description: 'Quitação com a tesouraria do órgão de classe.',
     details:
-      'Informe agência, conta corrente e banco em seu nome (CPF). Não aceitamos contas conjuntas em que você não seja o titular principal.',
-    icon: 'bank-outline',
+      'Emitida pelo órgão de classe, dentro da data de validade, com a situação "quite com a tesouraria do conselho". Deve conter nome completo do profissional e número da inscrição.',
+    icon: 'cash-check',
   },
   {
-    id: 'diploma',
-    name: 'Diploma de Graduação',
-    description: 'Diploma de Medicina expedido por instituição reconhecida pelo MEC.',
+    id: 'certidao-etica',
+    name: 'Certidão Ético-Profissional',
+    description: 'Emitida pelo órgão de classe, dentro da validade.',
     details:
-      'Diploma frente e verso ou certificado de conclusão acompanhado da apostila de registro. Deve constar o nome da instituição e a data de colação de grau.',
-    icon: 'school-outline',
-  },
-  {
-    id: 'crm',
-    name: 'Registro no CRM',
-    description: 'Carteira ou certidão de registro ativo no Conselho Regional de Medicina.',
-    details:
-      'Carteira física, digital ou certidão de inscrição emitida pelo CRM do seu estado, com situação "ativo" e dentro da validade.',
-    icon: 'badge-account-horizontal-outline',
-  },
-  {
-    id: 'rqe',
-    name: 'Título de Especialista (RQE)',
-    description: 'Registro de Qualificação de Especialista emitido pelo CRM.',
-    details:
-      'Documento que comprova sua especialidade médica reconhecida pelo CRM. Aceitamos o certificado da sociedade de especialidade junto com o RQE registrado.',
-    icon: 'medal-outline',
-  },
-  {
-    id: 'certidao-crm',
-    name: 'Certidão Negativa do CRM',
-    description: 'Comprovante de inexistência de processos ético-profissionais.',
-    details:
-      'Solicite a certidão de ética no portal do CRM do seu estado. A validade aceita é de até 90 dias contados da emissão.',
+      'Emitida pelo órgão de classe. Deve apresentar data de validade e data de emissão (no TJPR é obrigatório estar dentro de 30 dias corridos). Não pode haver conduta disciplinar nos últimos 5 anos — 10 anos no caso do TJRJ. Conter nome completo do profissional e número da inscrição.',
     icon: 'shield-check-outline',
   },
   {
-    id: 'antecedentes-federal',
-    name: 'Antecedentes Criminais (Federal)',
-    description: 'Certidão emitida pela Justiça Federal, válida por 90 dias.',
+    id: 'diploma',
+    name: 'Diploma',
+    description: 'Graduação concluída, com registro autenticado no verso.',
     details:
-      'Emita gratuitamente em pf.gov.br ou em portal.trf.jus.br. O arquivo precisa conter o QR code de validação e estar dentro da validade.',
-    icon: 'gavel',
+      'Deve conter nome completo do profissional, nome da instituição de ensino, indicação da conclusão da graduação na área de atuação, data da colação/conclusão do curso e verso com o registro autenticado.',
+    icon: 'school-outline',
   },
   {
-    id: 'antecedentes-estadual',
-    name: 'Antecedentes Criminais (Estadual)',
-    description: 'Certidão emitida pela Justiça Estadual, válida por 90 dias.',
+    id: 'especializacoes',
+    name: 'Certificado de Especializações',
+    description: 'Se houver, com registro autenticado no verso.',
     details:
-      'Emita no Tribunal de Justiça do seu estado. Caso tenha residido em mais de um estado nos últimos 5 anos, anexe uma certidão de cada UF.',
-    icon: 'scale-balance',
+      'Quando houver, deve conter nome completo do profissional, nome da instituição de ensino ou hospital de residência médica, identificação da especialidade cursada e verso com o registro autenticado.',
+    icon: 'certificate-outline',
   },
   {
-    id: 'vacina',
-    name: 'Cartão de Vacina',
-    description: 'Comprovante atualizado, incluindo hepatite B e tétano.',
+    id: 'rqe',
+    name: 'Certidão de RQE (exclusivo médicos)',
+    description: 'Registro de Qualificação de Especialidade emitido pelo CRM.',
     details:
-      'Cartão completo ou Caderneta Digital do Conecte SUS. Vacinas obrigatórias: hepatite B (3 doses), dT/dTpa, tríplice viral e influenza vigente.',
-    icon: 'needle',
+      'Exclusivo para médicos. Emitido junto ao CRM do Estado, com a indicação da qualificação (ex.: cardiologista, clínica médica, ortopedia e traumatologia, neurologia). Deve conter nome completo, número da inscrição, número do RQE, data de validade e data de emissão (TJPR considera apenas dentro de 30 dias corridos).',
+    icon: 'medal-outline',
   },
   {
-    id: 'aso',
-    name: 'Exame Admissional (ASO)',
-    description: 'Atestado de Saúde Ocupacional com validade de 12 meses.',
+    id: 'nit',
+    name: 'Comprovante NIT',
+    description: 'Extrato de contribuição previdenciária.',
     details:
-      'ASO emitido por médico do trabalho, atestando aptidão para a função de perito. O documento deve conter CRM e CNES da clínica emissora.',
-    icon: 'clipboard-pulse-outline',
-  },
-  {
-    id: 'pis',
-    name: 'PIS/PASEP',
-    description: 'Número de inscrição PIS, PASEP ou NIT vinculado ao seu CPF.',
-    details:
-      'Pode ser consultado no app Carteira de Trabalho Digital ou no extrato da Caixa/Banco do Brasil. Envie a tela com o número visível.',
+      'Obrigatoriamente o extrato de contribuição previdenciária — a CTPS digital e a física são rejeitadas. Precisa conter número do NIT, nome completo do profissional e CPF.',
     icon: 'card-text-outline',
   },
   {
-    id: 'cnh',
-    name: 'CNH (Categoria B ou superior)',
-    description: 'Carteira Nacional de Habilitação vigente para deslocamentos.',
+    id: 'curriculo',
+    name: 'Currículo',
+    description: 'Experiência acadêmica e profissional do perito.',
     details:
-      'Necessária para perícias domiciliares e deslocamentos entre unidades. A CNH deve estar dentro da validade e em categoria B, AB, C, D ou E.',
-    icon: 'car-outline',
+      'Contém experiência acadêmica e profissional. Alteramos o número de telefone e e-mail para os do escritório. Aceitamos o currículo Lattes de forma geral — obrigatório para cadastro no TJAM e no TJFT.',
+    icon: 'file-account-outline',
+  },
+  {
+    id: 'bancarios',
+    name: 'Comprovante de Dados Bancários',
+    description: 'Conta em nome do perito titular.',
+    details:
+      'Precisa conter nome da instituição bancária, nome do perito como titular da conta, CPF, número da agência e número da conta bancária.',
+    icon: 'bank-outline',
   },
   {
     id: 'foto',
-    name: 'Foto 3x4 Recente',
-    description: 'Fotografia profissional com fundo claro, dos últimos 6 meses.',
+    name: 'Foto Profissional',
+    description: 'Foto utilizada para cadastro no TJSP e cartas.',
     details:
-      'Foto frontal, rosto descoberto, fundo branco ou claro e vestimenta profissional. Será utilizada no crachá e em laudos periciais.',
+      'Utilizada para cadastro no TJSP e reaproveitada na carta de apresentação aos tribunais. Não há requisitos rígidos, mas pedimos que seja o mais profissional possível e transmita seriedade.',
     icon: 'account-box-outline',
   },
   {
-    id: 'termo',
-    name: 'Termo de Consentimento',
-    description: 'Declaração de ciência e concordância com as políticas da MPericias.',
+    id: 'inscricao-municipal',
+    name: 'Inscrição Municipal (TJMG e JT)',
+    description: 'Exigido para TJMG e Justiça do Trabalho.',
     details:
-      'O termo é assinado digitalmente no app, com validade jurídica via certificado ICP-Brasil. Você poderá baixar uma cópia após a assinatura.',
-    icon: 'file-sign',
-    requiresSignature: true,
+      'Comprovante de inscrição municipal contendo: número da inscrição municipal, nome completo, número do CPF, situação ativa/regular e a atividade profissional desenvolvida.',
+    icon: 'city-variant-outline',
+  },
+  {
+    id: 'curso-pericia-tjrj',
+    name: 'Curso em Perícia Judicial (TJRJ)',
+    description: 'Certificado obrigatório para cadastro no TJRJ.',
+    details:
+      'Obrigatório que seja em perícia judicial (perícia médica é rejeitada). Carga horária mínima de 21h. Deve conter nome completo do profissional e data da conclusão.',
+    icon: 'gavel',
   },
 ];
 
 const INITIAL_FILES: Record<string, AttachedFile> = {
-  rg: { uri: '', name: 'documento-identidade.pdf', mimeType: 'application/pdf', size: 245_000, isMock: true },
-  cpf: { uri: '', name: 'cpf-cartao.jpg', mimeType: 'image/jpeg', size: 182_400, isMock: true },
+  'doc-pessoal': { uri: '', name: 'rg-frente-verso.pdf', mimeType: 'application/pdf', size: 245_000, isMock: true },
+  cpf: { uri: '', name: 'comprovante-cpf-receita.pdf', mimeType: 'application/pdf', size: 182_400, isMock: true },
   residencia: { uri: '', name: 'conta-luz-marco.pdf', mimeType: 'application/pdf', size: 318_000, isMock: true },
   bancarios: { uri: '', name: 'comprovante-bancario.pdf', mimeType: 'application/pdf', size: 152_900, isMock: true },
 };
@@ -230,19 +228,6 @@ export default function DossieScreen() {
         'Tente novamente em alguns instantes ou escolha outro arquivo.'
       );
     }
-  };
-
-  const handleSign = (doc: DocItem) => {
-    setFiles((prev) => ({
-      ...prev,
-      [doc.id]: {
-        uri: '',
-        name: 'termo-consentimento-assinado.pdf',
-        mimeType: 'application/pdf',
-        size: 84_500,
-        isMock: true,
-      },
-    }));
   };
 
   const handleRemove = (docId: string) => {
@@ -308,7 +293,6 @@ export default function DossieScreen() {
               doc={doc}
               file={files[doc.id]}
               onAttach={() => handleAttach(doc)}
-              onSign={() => handleSign(doc)}
               onView={() => setViewDocId(doc.id)}
               onInfo={() => setDetailsDoc(doc)}
             />
@@ -488,7 +472,6 @@ type DocumentCardProps = {
   doc: DocItem;
   file?: AttachedFile;
   onAttach: () => void;
-  onSign: () => void;
   onView: () => void;
   onInfo: () => void;
 };
@@ -497,12 +480,10 @@ function DocumentCard({
   doc,
   file,
   onAttach,
-  onSign,
   onView,
   onInfo,
 }: DocumentCardProps) {
   const isAttached = !!file;
-  const requiresSignature = !!doc.requiresSignature;
 
   return (
     <View style={styles.docCard}>
@@ -542,11 +523,6 @@ function DocumentCard({
                 <View style={styles.statusDotVerified} />
                 <Text style={styles.statusVerified}>Anexado</Text>
               </>
-            ) : requiresSignature ? (
-              <>
-                <View style={styles.statusDotSignature} />
-                <Text style={styles.statusSignature}>Requer assinatura</Text>
-              </>
             ) : (
               <>
                 <View style={styles.statusDotPending} />
@@ -568,21 +544,16 @@ function DocumentCard({
         </TouchableOpacity>
       ) : (
         <TouchableOpacity
-          style={[
-            styles.docAction,
-            requiresSignature && styles.docActionSignature,
-          ]}
+          style={styles.docAction}
           activeOpacity={0.85}
-          onPress={requiresSignature ? onSign : onAttach}
+          onPress={onAttach}
         >
           <MaterialCommunityIcons
-            name={requiresSignature ? 'draw-pen' : 'tray-arrow-up'}
+            name="tray-arrow-up"
             size={16}
             color="#4AAFA6"
           />
-          <Text style={styles.docActionText}>
-            {requiresSignature ? 'Assinar' : 'Anexar'}
-          </Text>
+          <Text style={styles.docActionText}>Anexar</Text>
         </TouchableOpacity>
       )}
     </View>
@@ -744,13 +715,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#E07A5F',
     marginRight: 6,
   },
-  statusDotSignature: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#D4A04C',
-    marginRight: 6,
-  },
   statusVerified: {
     fontSize: 11,
     fontWeight: '600',
@@ -763,12 +727,6 @@ const styles = StyleSheet.create({
     color: '#E07A5F',
     letterSpacing: 0.2,
   },
-  statusSignature: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#D4A04C',
-    letterSpacing: 0.2,
-  },
   docAction: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -779,10 +737,6 @@ const styles = StyleSheet.create({
     borderColor: '#B9DCD7',
     backgroundColor: '#F4FAF8',
     gap: 6,
-  },
-  docActionSignature: {
-    borderColor: '#E8D5A8',
-    backgroundColor: '#FBF6EC',
   },
   docActionText: {
     fontSize: 12,

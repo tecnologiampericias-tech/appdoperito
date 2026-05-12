@@ -30,17 +30,17 @@ const FAQ: FaqItem[] = [
   {
     question: 'Quais documentos preciso enviar?',
     answer:
-      'Você precisa enviar 16 documentos no Dossiê Médico: pessoais (RG, CPF, comprovante de residência, dados bancários), de formação (diploma, registro CRM, RQE, certidão negativa do CRM), antecedentes criminais (federal e estadual), saúde ocupacional (cartão de vacina, ASO), trabalhistas (PIS/PASEP, CNH), foto 3x4 recente e o Termo de Consentimento. Toque em cada item no Dossiê para ver instruções detalhadas.',
+      'O cadastro reúne 16 itens: documento pessoal (RG ou CNH), cédula do órgão de classe, comprovante de CPF, título de eleitor, comprovante de residência, regularidade financeira, certidão ético-profissional, diploma, certificado de especializações (se houver), certidão de RQE (exclusivo médicos), comprovante NIT, currículo, dados bancários, foto profissional, inscrição municipal (TJMG e Justiça do Trabalho) e certificado de curso em perícia judicial (TJRJ). Toque em cada item no dossiê para ver as exigências detalhadas.',
   },
   {
-    question: 'Como tirar a Certidão Negativa do CRM?',
+    question: 'Como tirar a Certidão Ético-Profissional?',
     answer:
-      'Acesse o portal do CRM do seu estado, faça login com seu número de CRM, vá em "Certidões" e solicite a "Certidão de Ética Profissional". O documento é gerado em até 5 dias úteis e tem validade de 90 dias a partir da emissão.',
+      'Acesse o portal do seu órgão de classe (CRM, CREA, CAU, COREN, etc.), faça login com o número da sua inscrição e solicite a Certidão Ético-Profissional. Atenção aos prazos: o TJPR só aceita certidões emitidas há, no máximo, 30 dias corridos, e o TJRJ exige inexistência de conduta disciplinar nos últimos 10 anos.',
   },
   {
-    question: 'Onde consigo emitir o ASO?',
+    question: 'O comprovante de CPF da Receita serve?',
     answer:
-      'O Atestado de Saúde Ocupacional é emitido por um médico do trabalho. Procure uma clínica ocupacional credenciada (Hapvida, SESMT da sua unidade, ou clínicas privadas) e solicite um exame admissional para a função de perito médico. Custo médio: R$ 80 a R$ 150.',
+      'Sim — e é o único aceito. Precisa ser emitido pela Receita Federal, com no máximo 30 dias de emissão, exibindo nome completo, número do CPF, data de nascimento e a situação "REGULAR".',
   },
   {
     question: 'Posso enviar fotos do celular?',
@@ -50,12 +50,12 @@ const FAQ: FaqItem[] = [
   {
     question: 'Quanto tempo leva a validação?',
     answer:
-      'Após o envio completo do Dossiê, nossa equipe faz a validação em até 48 horas úteis. Você receberá notificações por e-mail e no app a cada etapa concluída. Documentos com pendências são sinalizados individualmente para reenvio.',
+      'Após o envio completo do dossiê, nossa equipe faz a validação em até 48 horas úteis. Você receberá notificações por e-mail e no app a cada etapa concluída. Documentos com pendências são sinalizados individualmente para reenvio.',
   },
   {
     question: 'Posso editar um documento já enviado?',
     answer:
-      'Sim. No Dossiê Médico, toque no ícone de olho ao lado do documento anexado para visualizá-lo. Dentro da pré-visualização há um botão "Remover" que permite excluir o arquivo e enviar uma nova versão.',
+      'Sim. No dossiê, toque no ícone de olho ao lado do documento anexado para visualizá-lo. Dentro da pré-visualização há um botão "Remover" que permite excluir o arquivo e enviar uma nova versão.',
   },
 ];
 
@@ -97,7 +97,7 @@ export default function ChatIAScreen() {
 
     const answer =
       presetAnswer ??
-      'Ótima pergunta! Estou processando o melhor caminho para te responder. Enquanto isso, você pode consultar as instruções de cada documento direto no Dossiê Médico — basta tocar no nome do item.';
+      'Ótima pergunta! Estou processando o melhor caminho para te responder. Enquanto isso, você pode consultar as instruções de cada documento direto no dossiê — basta tocar no nome do item.';
 
     setTimeout(() => {
       setMessages((prev) => [
