@@ -21,7 +21,7 @@ export default function SignupScreen() {
   const [showPassword, setShowPassword] = useState(false);
 
   const handleSignup = () => {
-    router.replace('/(tabs)');
+    router.push('/dossie');
   };
 
   const handleGoogleSignup = () => {};
@@ -153,7 +153,7 @@ export default function SignupScreen() {
               onPress={handleSignup}
               activeOpacity={0.85}
             >
-              <Text style={styles.submitButtonText}>Finalizar Cadastro</Text>
+              <Text style={styles.submitButtonText}>Continuar</Text>
             </TouchableOpacity>
 
             <View style={styles.dividerContainer}>
