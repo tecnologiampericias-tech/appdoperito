@@ -310,7 +310,6 @@ export default function DossieScreen() {
               onAttach={() => handleAttach(doc)}
               onSign={() => handleSign(doc)}
               onView={() => setViewDocId(doc.id)}
-              onRemove={() => handleRemove(doc.id)}
               onInfo={() => setDetailsDoc(doc)}
             />
           ))}
@@ -485,7 +484,6 @@ type DocumentCardProps = {
   onAttach: () => void;
   onSign: () => void;
   onView: () => void;
-  onRemove: () => void;
   onInfo: () => void;
 };
 
@@ -495,7 +493,6 @@ function DocumentCard({
   onAttach,
   onSign,
   onView,
-  onRemove,
   onInfo,
 }: DocumentCardProps) {
   const isAttached = !!file;
@@ -555,28 +552,14 @@ function DocumentCard({
       </TouchableOpacity>
 
       {isAttached ? (
-        <View style={styles.attachedActions}>
-          <TouchableOpacity
-            style={styles.iconActionButton}
-            onPress={onView}
-            activeOpacity={0.7}
-            hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-          >
-            <Ionicons name="eye-outline" size={18} color="#4AAFA6" />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.iconActionButton, styles.iconActionDanger]}
-            onPress={onRemove}
-            activeOpacity={0.7}
-            hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-          >
-            <MaterialCommunityIcons
-              name="trash-can-outline"
-              size={18}
-              color="#C25A4A"
-            />
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          style={styles.iconActionButton}
+          onPress={onView}
+          activeOpacity={0.7}
+          hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+        >
+          <Ionicons name="eye-outline" size={18} color="#4AAFA6" />
+        </TouchableOpacity>
       ) : (
         <TouchableOpacity
           style={[
@@ -801,24 +784,15 @@ const styles = StyleSheet.create({
     color: '#4AAFA6',
     letterSpacing: 0.3,
   },
-  attachedActions: {
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: 6,
-  },
   iconActionButton: {
-    width: 34,
-    height: 34,
+    width: 36,
+    height: 36,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: '#B9DCD7',
     backgroundColor: '#F4FAF8',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  iconActionDanger: {
-    borderColor: '#F3CFC8',
-    backgroundColor: '#FCF4F2',
   },
   helpCard: {
     backgroundColor: '#FFFFFF',
