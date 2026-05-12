@@ -8,12 +8,13 @@ import {
   ScrollView,
   Modal,
   Pressable,
+  Image,
+  Alert,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-
-type DocStatus = 'verified' | 'pending' | 'signature';
+import * as DocumentPicker from 'expo-document-picker';
 
 type DocItem = {
   id: string;
@@ -21,10 +22,18 @@ type DocItem = {
   description: string;
   details: string;
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
-  status: DocStatus;
+  requiresSignature?: boolean;
 };
 
-const INITIAL_DOCUMENTS: DocItem[] = [
+type AttachedFile = {
+  uri: string;
+  name: string;
+  mimeType?: string;
+  size?: number;
+  isMock?: boolean;
+};
+
+const DOCUMENTS: DocItem[] = [
   {
     id: 'rg',
     name: 'Documento de Identidade (RG)',
@@ -32,7 +41,6 @@ const INITIAL_DOCUMENTS: DocItem[] = [
     details:
       'Envie uma foto nítida da frente e do verso do seu RG ou outro documento oficial com foto (CNH, passaporte). Aceitamos PDF, JPG ou PNG de até 10 MB por arquivo.',
     icon: 'card-account-details-outline',
-    status: 'verified',
   },
   {
     id: 'cpf',
@@ -41,7 +49,6 @@ const INITIAL_DOCUMENTS: DocItem[] = [
     details:
       'Anexe o cartão CPF ou um comprovante de situação cadastral emitido em receita.fazenda.gov.br. A situação precisa estar "Regular".',
     icon: 'numeric',
-    status: 'verified',
   },
   {
     id: 'residencia',
@@ -50,7 +57,6 @@ const INITIAL_DOCUMENTS: DocItem[] = [
     details:
       'O comprovante deve conter seu nome completo e endereço atual, com data de emissão dentro dos últimos 90 dias.',
     icon: 'home-outline',
-    status: 'verified',
   },
   {
     id: 'bancarios',
@@ -59,7 +65,6 @@ const INITIAL_DOCUMENTS: DocItem[] = [
     details:
       'Informe agência, conta corrente e banco em seu nome (CPF). Não aceitamos contas conjuntas em que você não seja o titular principal.',
     icon: 'bank-outline',
-    status: 'verified',
   },
   {
     id: 'diploma',
@@ -68,7 +73,6 @@ const INITIAL_DOCUMENTS: DocItem[] = [
     details:
       'Diploma frente e verso ou certificado de conclusão acompanhado da apostila de registro. Deve constar o nome da instituição e a data de colação de grau.',
     icon: 'school-outline',
-    status: 'pending',
   },
   {
     id: 'crm',
@@ -77,7 +81,6 @@ const INITIAL_DOCUMENTS: DocItem[] = [
     details:
       'Carteira física, digital ou certidão de inscrição emitida pelo CRM do seu estado, com situação "ativo" e dentro da validade.',
     icon: 'badge-account-horizontal-outline',
-    status: 'pending',
   },
   {
     id: 'rqe',
@@ -86,7 +89,6 @@ const INITIAL_DOCUMENTS: DocItem[] = [
     details:
       'Documento que comprova sua especialidade médica reconhecida pelo CRM. Aceitamos o certificado da sociedade de especialidade junto com o RQE registrado.',
     icon: 'medal-outline',
-    status: 'pending',
   },
   {
     id: 'certidao-crm',
@@ -95,7 +97,6 @@ const INITIAL_DOCUMENTS: DocItem[] = [
     details:
       'Solicite a certidão de ética no portal do CRM do seu estado. A validade aceita é de até 90 dias contados da emissão.',
     icon: 'shield-check-outline',
-    status: 'pending',
   },
   {
     id: 'antecedentes-federal',
@@ -104,7 +105,6 @@ const INITIAL_DOCUMENTS: DocItem[] = [
     details:
       'Emita gratuitamente em pf.gov.br ou em portal.trf.jus.br. O arquivo precisa conter o QR code de validação e estar dentro da validade.',
     icon: 'gavel',
-    status: 'pending',
   },
   {
     id: 'antecedentes-estadual',
@@ -113,7 +113,6 @@ const INITIAL_DOCUMENTS: DocItem[] = [
     details:
       'Emita no Tribunal de Justiça do seu estado. Caso tenha residido em mais de um estado nos últimos 5 anos, anexe uma certidão de cada UF.',
     icon: 'scale-balance',
-    status: 'pending',
   },
   {
     id: 'vacina',
@@ -122,7 +121,6 @@ const INITIAL_DOCUMENTS: DocItem[] = [
     details:
       'Cartão completo ou Caderneta Digital do Conecte SUS. Vacinas obrigatórias: hepatite B (3 doses), dT/dTpa, tríplice viral e influenza vigente.',
     icon: 'needle',
-    status: 'pending',
   },
   {
     id: 'aso',
@@ -131,7 +129,6 @@ const INITIAL_DOCUMENTS: DocItem[] = [
     details:
       'ASO emitido por médico do trabalho, atestando aptidão para a função de perito. O documento deve conter CRM e CNES da clínica emissora.',
     icon: 'clipboard-pulse-outline',
-    status: 'pending',
   },
   {
     id: 'pis',
@@ -140,7 +137,6 @@ const INITIAL_DOCUMENTS: DocItem[] = [
     details:
       'Pode ser consultado no app Carteira de Trabalho Digital ou no extrato da Caixa/Banco do Brasil. Envie a tela com o número visível.',
     icon: 'card-text-outline',
-    status: 'pending',
   },
   {
     id: 'cnh',
@@ -149,7 +145,6 @@ const INITIAL_DOCUMENTS: DocItem[] = [
     details:
       'Necessária para perícias domiciliares e deslocamentos entre unidades. A CNH deve estar dentro da validade e em categoria B, AB, C, D ou E.',
     icon: 'car-outline',
-    status: 'pending',
   },
   {
     id: 'foto',
@@ -158,7 +153,6 @@ const INITIAL_DOCUMENTS: DocItem[] = [
     details:
       'Foto frontal, rosto descoberto, fundo branco ou claro e vestimenta profissional. Será utilizada no crachá e em laudos periciais.',
     icon: 'account-box-outline',
-    status: 'pending',
   },
   {
     id: 'termo',
@@ -167,43 +161,103 @@ const INITIAL_DOCUMENTS: DocItem[] = [
     details:
       'O termo é assinado digitalmente no app, com validade jurídica via certificado ICP-Brasil. Você poderá baixar uma cópia após a assinatura.',
     icon: 'file-sign',
-    status: 'signature',
+    requiresSignature: true,
   },
 ];
 
-export default function DossieScreen() {
-  const [docs, setDocs] = useState<DocItem[]>(INITIAL_DOCUMENTS);
-  const [detailsDoc, setDetailsDoc] = useState<DocItem | null>(null);
+const INITIAL_FILES: Record<string, AttachedFile> = {
+  rg: { uri: '', name: 'documento-identidade.pdf', mimeType: 'application/pdf', size: 245_000, isMock: true },
+  cpf: { uri: '', name: 'cpf-cartao.jpg', mimeType: 'image/jpeg', size: 182_400, isMock: true },
+  residencia: { uri: '', name: 'conta-luz-marco.pdf', mimeType: 'application/pdf', size: 318_000, isMock: true },
+  bancarios: { uri: '', name: 'comprovante-bancario.pdf', mimeType: 'application/pdf', size: 152_900, isMock: true },
+};
 
-  const total = docs.length;
+function formatBytes(bytes?: number): string {
+  if (!bytes || bytes <= 0) return '—';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function isImageMime(mime?: string): boolean {
+  return !!mime && mime.startsWith('image/');
+}
+
+function fileIconFor(file: AttachedFile): keyof typeof MaterialCommunityIcons.glyphMap {
+  if (isImageMime(file.mimeType)) return 'file-image-outline';
+  if (file.mimeType === 'application/pdf') return 'file-pdf-box';
+  return 'file-document-outline';
+}
+
+export default function DossieScreen() {
+  const [files, setFiles] = useState<Record<string, AttachedFile>>(INITIAL_FILES);
+  const [detailsDoc, setDetailsDoc] = useState<DocItem | null>(null);
+  const [viewDocId, setViewDocId] = useState<string | null>(null);
+
+  const total = DOCUMENTS.length;
   const completed = useMemo(
-    () => docs.filter((d) => d.status === 'verified').length,
-    [docs]
+    () => DOCUMENTS.filter((d) => files[d.id]).length,
+    [files]
   );
   const progress = total === 0 ? 0 : completed / total;
   const allComplete = completed === total;
 
   const handleBack = () => router.back();
+  const handleNext = () => router.replace('/(tabs)');
 
-  const handleNext = () => {
-    router.replace('/(tabs)');
+  const handleAttach = async (doc: DocItem) => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['image/*', 'application/pdf'],
+        copyToCacheDirectory: true,
+        multiple: false,
+      });
+      if (result.canceled) return;
+      const asset = result.assets[0];
+      if (!asset) return;
+      setFiles((prev) => ({
+        ...prev,
+        [doc.id]: {
+          uri: asset.uri,
+          name: asset.name ?? 'arquivo',
+          mimeType: asset.mimeType,
+          size: asset.size,
+        },
+      }));
+    } catch (err) {
+      Alert.alert(
+        'Não foi possível anexar',
+        'Tente novamente em alguns instantes ou escolha outro arquivo.'
+      );
+    }
   };
 
-  const handleAttach = (id: string) => {
-    setDocs((prev) =>
-      prev.map((doc) =>
-        doc.id === id ? { ...doc, status: 'verified' } : doc
-      )
-    );
+  const handleSign = (doc: DocItem) => {
+    setFiles((prev) => ({
+      ...prev,
+      [doc.id]: {
+        uri: '',
+        name: 'termo-consentimento-assinado.pdf',
+        mimeType: 'application/pdf',
+        size: 84_500,
+        isMock: true,
+      },
+    }));
   };
 
-  const handleSign = (id: string) => {
-    setDocs((prev) =>
-      prev.map((doc) =>
-        doc.id === id ? { ...doc, status: 'verified' } : doc
-      )
-    );
+  const handleRemove = (docId: string) => {
+    setFiles((prev) => {
+      const next = { ...prev };
+      delete next[docId];
+      return next;
+    });
+    setViewDocId((current) => (current === docId ? null : current));
   };
+
+  const viewDoc = viewDocId
+    ? DOCUMENTS.find((d) => d.id === viewDocId) ?? null
+    : null;
+  const viewFile = viewDocId ? files[viewDocId] : undefined;
 
   return (
     <View style={styles.container}>
@@ -243,19 +297,20 @@ export default function DossieScreen() {
             </Text>
           </View>
           <View style={styles.progressTrack}>
-            <View
-              style={[styles.progressFill, { width: `${progress * 100}%` }]}
-            />
+            <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
           </View>
         </View>
 
         <View style={styles.docsList}>
-          {docs.map((doc) => (
+          {DOCUMENTS.map((doc) => (
             <DocumentCard
               key={doc.id}
               doc={doc}
-              onAttach={() => handleAttach(doc.id)}
-              onSign={() => handleSign(doc.id)}
+              file={files[doc.id]}
+              onAttach={() => handleAttach(doc)}
+              onSign={() => handleSign(doc)}
+              onView={() => setViewDocId(doc.id)}
+              onRemove={() => handleRemove(doc.id)}
               onInfo={() => setDetailsDoc(doc)}
             />
           ))}
@@ -322,9 +377,7 @@ export default function DossieScreen() {
                   />
                 </View>
                 <Text style={styles.modalTitle}>{detailsDoc.name}</Text>
-                <Text style={styles.modalDescription}>
-                  {detailsDoc.details}
-                </Text>
+                <Text style={styles.modalDescription}>{detailsDoc.details}</Text>
                 <TouchableOpacity
                   style={styles.modalCloseButton}
                   onPress={() => setDetailsDoc(null)}
@@ -337,20 +390,116 @@ export default function DossieScreen() {
           </Pressable>
         </Pressable>
       </Modal>
+
+      <Modal
+        visible={!!viewDoc && !!viewFile}
+        animationType="fade"
+        transparent
+        onRequestClose={() => setViewDocId(null)}
+      >
+        <Pressable
+          style={styles.modalBackdrop}
+          onPress={() => setViewDocId(null)}
+        >
+          <Pressable style={styles.modalCard} onPress={() => {}}>
+            {viewDoc && viewFile && (
+              <>
+                <View style={styles.viewerHeaderRow}>
+                  <Text style={styles.viewerLabel}>Arquivo anexado</Text>
+                  <TouchableOpacity
+                    onPress={() => setViewDocId(null)}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                    <Ionicons name="close" size={22} color="#687076" />
+                  </TouchableOpacity>
+                </View>
+                <Text style={styles.modalTitle}>{viewDoc.name}</Text>
+
+                {isImageMime(viewFile.mimeType) && viewFile.uri ? (
+                  <View style={styles.previewImageWrap}>
+                    <Image
+                      source={{ uri: viewFile.uri }}
+                      style={styles.previewImage}
+                      resizeMode="contain"
+                    />
+                  </View>
+                ) : (
+                  <View style={styles.previewFileWrap}>
+                    <MaterialCommunityIcons
+                      name={fileIconFor(viewFile)}
+                      size={42}
+                      color="#4AAFA6"
+                    />
+                    {viewFile.isMock && (
+                      <Text style={styles.previewMockNote}>
+                        Pré-visualização indisponível neste ambiente.
+                      </Text>
+                    )}
+                  </View>
+                )}
+
+                <View style={styles.fileMetaRow}>
+                  <View style={styles.fileMetaInfo}>
+                    <Text style={styles.fileMetaName} numberOfLines={1}>
+                      {viewFile.name}
+                    </Text>
+                    <Text style={styles.fileMetaSize}>
+                      {formatBytes(viewFile.size)}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.viewerActions}>
+                  <TouchableOpacity
+                    style={styles.viewerSecondaryButton}
+                    onPress={() => setViewDocId(null)}
+                    activeOpacity={0.85}
+                  >
+                    <Text style={styles.viewerSecondaryText}>Fechar</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.viewerDangerButton}
+                    onPress={() => handleRemove(viewDoc.id)}
+                    activeOpacity={0.85}
+                  >
+                    <MaterialCommunityIcons
+                      name="trash-can-outline"
+                      size={16}
+                      color="#C25A4A"
+                    />
+                    <Text style={styles.viewerDangerText}>Remover</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
 
 type DocumentCardProps = {
   doc: DocItem;
+  file?: AttachedFile;
   onAttach: () => void;
   onSign: () => void;
+  onView: () => void;
+  onRemove: () => void;
   onInfo: () => void;
 };
 
-function DocumentCard({ doc, onAttach, onSign, onInfo }: DocumentCardProps) {
-  const isVerified = doc.status === 'verified';
-  const isSignature = doc.status === 'signature';
+function DocumentCard({
+  doc,
+  file,
+  onAttach,
+  onSign,
+  onView,
+  onRemove,
+  onInfo,
+}: DocumentCardProps) {
+  const isAttached = !!file;
+  const requiresSignature = !!doc.requiresSignature;
 
   return (
     <View style={styles.docCard}>
@@ -362,10 +511,10 @@ function DocumentCard({ doc, onAttach, onSign, onInfo }: DocumentCardProps) {
         <View
           style={[
             styles.docIconWrap,
-            isVerified && styles.docIconWrapVerified,
+            isAttached && styles.docIconWrapVerified,
           ]}
         >
-          {isVerified ? (
+          {isAttached ? (
             <Ionicons name="checkmark-circle" size={26} color="#4AAFA6" />
           ) : (
             <MaterialCommunityIcons
@@ -383,13 +532,28 @@ function DocumentCard({ doc, onAttach, onSign, onInfo }: DocumentCardProps) {
           <Text style={styles.docDescription} numberOfLines={2}>
             {doc.description}
           </Text>
+
+          {isAttached && file && (
+            <View style={styles.fileChip}>
+              <MaterialCommunityIcons
+                name={fileIconFor(file)}
+                size={13}
+                color="#4AAFA6"
+              />
+              <Text style={styles.fileChipName} numberOfLines={1}>
+                {file.name}
+              </Text>
+              <Text style={styles.fileChipSize}>· {formatBytes(file.size)}</Text>
+            </View>
+          )}
+
           <View style={styles.docStatusRow}>
-            {isVerified ? (
+            {isAttached ? (
               <>
                 <View style={styles.statusDotVerified} />
-                <Text style={styles.statusVerified}>Verificado</Text>
+                <Text style={styles.statusVerified}>Anexado</Text>
               </>
-            ) : isSignature ? (
+            ) : requiresSignature ? (
               <>
                 <View style={styles.statusDotSignature} />
                 <Text style={styles.statusSignature}>Requer assinatura</Text>
@@ -404,22 +568,45 @@ function DocumentCard({ doc, onAttach, onSign, onInfo }: DocumentCardProps) {
         </View>
       </TouchableOpacity>
 
-      {!isVerified && (
+      {isAttached ? (
+        <View style={styles.attachedActions}>
+          <TouchableOpacity
+            style={styles.iconActionButton}
+            onPress={onView}
+            activeOpacity={0.7}
+            hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+          >
+            <Ionicons name="eye-outline" size={18} color="#4AAFA6" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.iconActionButton, styles.iconActionDanger]}
+            onPress={onRemove}
+            activeOpacity={0.7}
+            hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+          >
+            <MaterialCommunityIcons
+              name="trash-can-outline"
+              size={18}
+              color="#C25A4A"
+            />
+          </TouchableOpacity>
+        </View>
+      ) : (
         <TouchableOpacity
           style={[
             styles.docAction,
-            isSignature && styles.docActionSignature,
+            requiresSignature && styles.docActionSignature,
           ]}
           activeOpacity={0.85}
-          onPress={isSignature ? onSign : onAttach}
+          onPress={requiresSignature ? onSign : onAttach}
         >
           <MaterialCommunityIcons
-            name={isSignature ? 'draw-pen' : 'tray-arrow-up'}
+            name={requiresSignature ? 'draw-pen' : 'tray-arrow-up'}
             size={16}
             color="#4AAFA6"
           />
           <Text style={styles.docActionText}>
-            {isSignature ? 'Assinar' : 'Anexar'}
+            {requiresSignature ? 'Assinar' : 'Anexar'}
           </Text>
         </TouchableOpacity>
       )}
@@ -564,6 +751,28 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     marginBottom: 6,
   },
+  fileChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F4FAF8',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    alignSelf: 'flex-start',
+    marginBottom: 6,
+    gap: 5,
+    maxWidth: '100%',
+  },
+  fileChipName: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#1A3A36',
+    flexShrink: 1,
+  },
+  fileChipSize: {
+    fontSize: 11,
+    color: '#687076',
+  },
   docStatusRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -627,6 +836,25 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#4AAFA6',
     letterSpacing: 0.3,
+  },
+  attachedActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  iconActionButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#B9DCD7',
+    backgroundColor: '#F4FAF8',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconActionDanger: {
+    borderColor: '#F3CFC8',
+    backgroundColor: '#FCF4F2',
   },
   helpCard: {
     backgroundColor: '#FFFFFF',
@@ -774,6 +1002,107 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: '#FFFFFF',
+    letterSpacing: 0.3,
+  },
+  viewerHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
+  viewerLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#4AAFA6',
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+  },
+  previewImageWrap: {
+    height: 220,
+    backgroundColor: '#F4FAF8',
+    borderRadius: 14,
+    overflow: 'hidden',
+    marginBottom: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  previewImage: {
+    width: '100%',
+    height: '100%',
+  },
+  previewFileWrap: {
+    height: 140,
+    backgroundColor: '#F4FAF8',
+    borderRadius: 14,
+    marginBottom: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+    gap: 10,
+  },
+  previewMockNote: {
+    fontSize: 11,
+    color: '#687076',
+    textAlign: 'center',
+    lineHeight: 15,
+  },
+  fileMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F7F9FA',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 18,
+  },
+  fileMetaInfo: {
+    flex: 1,
+  },
+  fileMetaName: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#1A3A36',
+    marginBottom: 2,
+  },
+  fileMetaSize: {
+    fontSize: 11,
+    color: '#687076',
+  },
+  viewerActions: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  viewerSecondaryButton: {
+    flex: 1,
+    backgroundColor: '#F4FAF8',
+    borderWidth: 1,
+    borderColor: '#B9DCD7',
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  viewerSecondaryText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#4AAFA6',
+    letterSpacing: 0.3,
+  },
+  viewerDangerButton: {
+    flex: 1,
+    flexDirection: 'row',
+    backgroundColor: '#FCF4F2',
+    borderWidth: 1,
+    borderColor: '#F3CFC8',
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  viewerDangerText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#C25A4A',
     letterSpacing: 0.3,
   },
 });
