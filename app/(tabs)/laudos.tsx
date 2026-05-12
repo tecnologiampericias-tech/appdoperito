@@ -95,7 +95,7 @@ function LaudoRow({ laudo }: { laudo: Laudo }) {
           <Text style={styles.dateText}>{laudo.data}</Text>
         </View>
       </View>
-      <Ionicons name="chevron-forward" size={18} color="#C0CBD1" />
+      <Ionicons name="chevron-forward" size={18} color={colors.dotMuted} />
     </TouchableOpacity>
   );
 }

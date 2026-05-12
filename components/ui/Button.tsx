@@ -158,7 +158,7 @@ export function GoogleButton({ label, ...rest }: Omit<Props, 'variant' | 'iconLe
     <Button
       label={label}
       variant="social-google"
-      iconLeft={<Ionicons name="logo-google" size={20} color="#4285F4" />}
+      iconLeft={<Ionicons name="logo-google" size={20} color={colors.socialGoogleBrand} />}
       {...rest}
     />
   );

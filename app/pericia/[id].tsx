@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
   },
   heroTime: {
     fontSize: 13,
-    color: 'rgba(255,255,255,0.9)',
+    color: colors.onPrimary90,
     fontWeight: fontWeight.semibold,
   },
   heroName: {
@@ -195,7 +195,7 @@ const styles = StyleSheet.create({
   },
   heroMeta: {
     fontSize: 14,
-    color: 'rgba(255,255,255,0.88)',
+    color: colors.onPrimary88,
   },
   sectionLabel: {
     fontSize: 11,

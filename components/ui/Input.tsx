@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 12,
     fontWeight: fontWeight.bold,
-    color: '#2D3436',
+    color: colors.inputText,
     letterSpacing: 1,
   },
   container: {
@@ -165,6 +165,6 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 15,
-    color: '#2D3436',
+    color: colors.inputText,
   },
 });

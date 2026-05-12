@@ -42,15 +42,26 @@ export const colors = {
 
   pending: '#E07A5F',
 
+  inputText: '#2D3436',
+  onlineDot: '#86E0A6',
+  dotMuted: '#C0CBD1',
+  dotMutedDeep: '#D8DEE2',
+  helperLink: '#8A9694',
+  helperLinkUnderline: '#C7D2D0',
+
   white: '#FFFFFF',
   black: '#000000',
 
   socialGoogleBorder: '#DADCE0',
   socialGoogleText: '#3C4043',
+  socialGoogleBrand: '#4285F4',
   socialApple: '#000000',
 
   overlay: 'rgba(20, 36, 33, 0.55)',
+  onPrimary90: 'rgba(255, 255, 255, 0.9)',
+  onPrimary88: 'rgba(255, 255, 255, 0.88)',
   onPrimary85: 'rgba(255, 255, 255, 0.85)',
+  onPrimary80: 'rgba(255, 255, 255, 0.8)',
   onPrimary75: 'rgba(255, 255, 255, 0.75)',
   onPrimary18: 'rgba(255, 255, 255, 0.18)',
   onPrimary22: 'rgba(255, 255, 255, 0.22)',
@@ -230,21 +241,3 @@ export const Fonts = Platform.select({
   },
 });
 
-export const Colors = {
-  light: {
-    text: colors.text,
-    background: colors.surface,
-    tint: colors.primary,
-    icon: colors.textMuted,
-    tabIconDefault: colors.textPlaceholder,
-    tabIconSelected: colors.primary,
-  },
-  dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: '#FFFFFF',
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: '#FFFFFF',
-  },
-};

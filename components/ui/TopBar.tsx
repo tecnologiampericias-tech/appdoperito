@@ -25,7 +25,7 @@ export function TopBar({
         activeOpacity={0.7}
         onPress={onBellPress}
       >
-        <Ionicons name="notifications-outline" size={22} color="#2D3436" />
+        <Ionicons name="notifications-outline" size={22} color={colors.inputText} />
         {hasNotification && (
           <View style={[styles.dot, { borderColor: background }]} />
         )}

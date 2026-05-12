@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#86E0A6',
+    backgroundColor: colors.onlineDot,
     borderWidth: 2,
     borderColor: colors.primary,
   },
@@ -388,9 +388,9 @@ const styles = StyleSheet.create({
   },
   humanLinkText: {
     fontSize: 12,
-    color: '#8A9694',
+    color: colors.helperLink,
     textDecorationLine: 'underline',
-    textDecorationColor: '#C7D2D0',
+    textDecorationColor: colors.helperLinkUnderline,
   },
   inputBar: {
     flexDirection: 'row',

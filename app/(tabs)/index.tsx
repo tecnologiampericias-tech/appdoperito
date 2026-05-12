@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
   statLabel: {
     fontSize: 10,
     fontWeight: fontWeight.bold,
-    color: 'rgba(255,255,255,0.9)',
+    color: colors.onPrimary90,
     letterSpacing: 0.8,
   },
   sectionSolo: {

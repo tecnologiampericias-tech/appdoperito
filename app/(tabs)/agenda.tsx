@@ -92,7 +92,7 @@ function TimelineRow({ evento, isLast }: { evento: Evento; isLast: boolean }) {
             <Ionicons
               name="chevron-forward"
               size={18}
-              color={isNow ? 'rgba(255,255,255,0.8)' : '#C0CBD1'}
+              color={isNow ? colors.onPrimary80 : colors.dotMuted}
             />
           </View>
         </TouchableOpacity>
@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#C0CBD1',
+    backgroundColor: colors.dotMuted,
     marginBottom: spacing.xs,
   },
   dotActive: {
@@ -180,18 +180,18 @@ const styles = StyleSheet.create({
     height: 12,
     borderRadius: 6,
   },
-  dotEmpty: { backgroundColor: '#D8DEE2' },
+  dotEmpty: { backgroundColor: colors.dotMutedDeep },
   line: {
     flex: 1,
     width: 1.5,
-    backgroundColor: '#D8DEE2',
+    backgroundColor: colors.dotMutedDeep,
     marginTop: 2,
   },
   lineDashed: {
     backgroundColor: 'transparent',
     borderLeftWidth: 1.5,
     borderStyle: 'dashed',
-    borderColor: '#D8DEE2',
+    borderColor: colors.dotMutedDeep,
   },
   emptySlot: { flex: 1, minHeight: 60 },
   eventCard: {
