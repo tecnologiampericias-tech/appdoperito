@@ -590,7 +590,7 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: '#4AAFA6',
-    paddingTop: Platform.OS === 'ios' ? 56 : 36,
+    paddingTop: Platform.select({ ios: 56, android: 36, default: 14 }),
     paddingBottom: 14,
     paddingHorizontal: 16,
     flexDirection: 'row',

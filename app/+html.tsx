@@ -9,8 +9,9 @@ export default function Root({ children }: PropsWithChildren) {
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
         <meta
           name="viewport"
-          content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover"
+          content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no, viewport-fit=cover"
         />
+        <style dangerouslySetInnerHTML={{ __html: appShellCss }} />
 
         <title>App do Perito</title>
         <meta name="description" content="Aplicativo de gestão de perícias" />
@@ -32,6 +33,23 @@ export default function Root({ children }: PropsWithChildren) {
     </html>
   );
 }
+
+const appShellCss = `
+html, body {
+  height: 100%;
+  margin: 0;
+  overscroll-behavior: none;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  touch-action: pan-x pan-y;
+}
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+input, textarea, select {
+  font-size: 16px;
+}
+`;
 
 const swRegister = `
 if ('serviceWorker' in navigator) {
