@@ -18,6 +18,7 @@ export default function RootLayout() {
         <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen name="signup" options={{ headerShown: false }} />
         <Stack.Screen name="dossie" options={{ headerShown: false }} />
+        <Stack.Screen name="chat-ia" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="laudo/[id]" options={{ headerShown: false }} />
         <Stack.Screen name="pericia/[id]" options={{ headerShown: false, presentation: 'modal' }} />

@@ -315,21 +315,27 @@ export default function DossieScreen() {
           ))}
         </View>
 
-        <View style={styles.helpCard}>
-          <View style={styles.helpHeader}>
-            <View style={styles.helpIconWrap}>
-              <Ionicons name="help-circle-outline" size={20} color="#4AAFA6" />
-            </View>
-            <Text style={styles.helpTitle}>Precisa de ajuda?</Text>
+        <TouchableOpacity
+          style={styles.helpCard}
+          activeOpacity={0.9}
+          onPress={() => router.push('/chat-ia')}
+        >
+          <View style={styles.helpAvatar}>
+            <MaterialCommunityIcons name="robot-happy" size={26} color="#FFFFFF" />
+            <View style={styles.helpAvatarDot} />
           </View>
-          <Text style={styles.helpText}>
-            Nossa equipe de suporte está disponível para auxiliar no envio da
-            sua documentação pericial.
-          </Text>
-          <TouchableOpacity activeOpacity={0.7}>
-            <Text style={styles.helpLink}>Falar com Suporte</Text>
-          </TouchableOpacity>
-        </View>
+          <View style={styles.helpContent}>
+            <Text style={styles.helpEyebrow}>ASSISTENTE IA</Text>
+            <Text style={styles.helpTitle}>Tirar dúvidas com a Mia</Text>
+            <Text style={styles.helpText}>
+              Resposta em segundos sobre documentos, prazos e como emitir cada
+              certidão.
+            </Text>
+          </View>
+          <View style={styles.helpChevron}>
+            <Ionicons name="chevron-forward" size={18} color="#FFFFFF" />
+          </View>
+        </TouchableOpacity>
       </ScrollView>
 
       <View style={styles.footer}>
@@ -795,41 +801,67 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   helpCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#E0EDEB',
-  },
-  helpHeader: {
+    backgroundColor: '#2A8A7D',
+    borderRadius: 18,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    shadowColor: '#2A8A7D',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 6,
   },
-  helpIconWrap: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#EAF5F3',
+  helpAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.16)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 10,
+    marginRight: 14,
+  },
+  helpAvatarDot: {
+    position: 'absolute',
+    bottom: 6,
+    right: 6,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#86E0A6',
+    borderWidth: 2,
+    borderColor: '#2A8A7D',
+  },
+  helpContent: {
+    flex: 1,
+    paddingRight: 8,
+  },
+  helpEyebrow: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: 'rgba(255, 255, 255, 0.75)',
+    letterSpacing: 1.2,
+    marginBottom: 4,
   },
   helpTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#1A3A36',
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    marginBottom: 4,
   },
   helpText: {
     fontSize: 12,
-    color: '#687076',
+    color: 'rgba(255, 255, 255, 0.85)',
     lineHeight: 17,
-    marginBottom: 8,
   },
-  helpLink: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#4AAFA6',
+  helpChevron: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.18)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   footer: {
     position: 'absolute',
