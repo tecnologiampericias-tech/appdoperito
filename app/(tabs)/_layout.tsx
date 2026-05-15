@@ -1,10 +1,13 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HapticTab } from '@/components/haptic-tab';
 import { colors } from '@/constants/theme';
 
 export default function TabLayout() {
+  const insets = useSafeAreaInsets();
+
   return (
     <Tabs
       screenOptions={{
@@ -17,9 +20,9 @@ export default function TabLayout() {
           backgroundColor: colors.surface,
           borderTopWidth: 1,
           borderTopColor: colors.bgBlueGrey,
-          height: 64,
+          height: 64 + insets.bottom,
           paddingTop: 6,
-          paddingBottom: 8,
+          paddingBottom: 8 + insets.bottom,
         },
       }}>
       <Tabs.Screen
@@ -37,17 +40,17 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="laudos"
-        options={{
-          title: 'Laudos',
-          tabBarIcon: ({ color, size }) => <Ionicons name="clipboard-outline" size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
         name="agenda"
         options={{
           title: 'Agenda',
           tabBarIcon: ({ color, size }) => <Ionicons name="calendar-outline" size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="laudos"
+        options={{
+          title: 'Laudos',
+          tabBarIcon: ({ color, size }) => <Ionicons name="clipboard-outline" size={size} color={color} />,
         }}
       />
     </Tabs>

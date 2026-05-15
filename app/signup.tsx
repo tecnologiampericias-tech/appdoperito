@@ -20,14 +20,67 @@ import {
   PasswordInput,
   Screen,
 } from '@/components/ui';
+import { useAuth } from '@/contexts/AuthContext';
+import { getAuthErrorMessage } from '@/lib/authErrors';
+
+function formatCpf(value: string) {
+  const digits = value.replace(/\D/g, '').slice(0, 11);
+  return digits
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+}
 
 export default function SignupScreen() {
+  const { signUp } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [crm, setCrm] = useState('');
+  const [cpf, setCpf] = useState('');
   const [password, setPassword] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  const handleSignup = () => router.push('/dossie');
+  const handleSignup = async () => {
+    if (submitting) return;
+    setErrorMessage(null);
+    setSuccessMessage(null);
+
+    const trimmedName = name.trim();
+    const trimmedEmail = email.trim();
+    const cpfDigits = cpf.replace(/\D/g, '');
+
+    if (!trimmedName || !trimmedEmail || !cpfDigits || !password) {
+      setErrorMessage('Preencha todos os campos.');
+      return;
+    }
+    if (cpfDigits.length !== 11) {
+      setErrorMessage('CPF inválido. Digite os 11 dígitos.');
+      return;
+    }
+    if (password.length < 6) {
+      setErrorMessage('A senha deve ter ao menos 6 caracteres.');
+      return;
+    }
+
+    setSubmitting(true);
+    const { error } = await signUp({
+      fullName: trimmedName,
+      cpf: cpfDigits,
+      email: trimmedEmail,
+      password,
+    });
+    setSubmitting(false);
+
+    if (error) {
+      setErrorMessage(getAuthErrorMessage(error));
+      return;
+    }
+    setSuccessMessage(
+      'Conta criada! Enviamos um link de confirmação para seu e-mail. Confirme para acessar.',
+    );
+  };
+
   const handleGoToLogin = () => router.replace('/login');
   const handleGoogleSignup = () => {};
   const handleAppleSignup = () => {};
@@ -72,12 +125,13 @@ export default function SignupScreen() {
             />
 
             <Input
-              label="CRM (REGISTRO MÉDICO)"
+              label="CPF"
               iconLeft="card-account-details-outline"
-              placeholder="000000-UF"
-              value={crm}
-              onChangeText={setCrm}
-              autoCapitalize="characters"
+              placeholder="000.000.000-00"
+              value={cpf}
+              onChangeText={(text) => setCpf(formatCpf(text))}
+              keyboardType="number-pad"
+              maxLength={14}
               containerStyle={styles.field}
             />
 
@@ -90,9 +144,17 @@ export default function SignupScreen() {
               containerStyle={styles.field}
             />
 
+            {errorMessage ? (
+              <Text style={styles.errorText}>{errorMessage}</Text>
+            ) : null}
+            {successMessage ? (
+              <Text style={styles.successText}>{successMessage}</Text>
+            ) : null}
+
             <Button
-              label="Continuar"
-              onPress={handleSignup}
+              label={successMessage ? 'Ir para o login' : 'Continuar'}
+              onPress={successMessage ? handleGoToLogin : handleSignup}
+              loading={submitting}
               textStyle={styles.primaryButtonText}
               style={styles.primaryButton}
             />
@@ -168,5 +230,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: fontWeight.bold,
     color: colors.primary,
+  },
+  errorText: {
+    color: colors.danger,
+    fontSize: 13,
+    marginBottom: spacing.md,
+    textAlign: 'center',
+  },
+  successText: {
+    color: colors.primary,
+    fontSize: 13,
+    marginBottom: spacing.md,
+    textAlign: 'center',
   },
 });

@@ -2,24 +2,22 @@ import React from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, layout, spacing } from '@/constants/theme';
-import { BrandMark } from './BrandMark';
+import { UserMark } from './UserMark';
 
 type Props = {
   background?: string;
-  brandLabel?: string;
   onBellPress?: () => void;
   hasNotification?: boolean;
 };
 
 export function TopBar({
   background = colors.bgGreyLight,
-  brandLabel,
   onBellPress,
   hasNotification = true,
 }: Props) {
   return (
     <View style={[styles.bar, { backgroundColor: background }]}>
-      <BrandMark label={brandLabel} />
+      <UserMark />
       <TouchableOpacity
         style={styles.bell}
         activeOpacity={0.7}

@@ -20,12 +20,37 @@ import {
   PasswordInput,
   Screen,
 } from '@/components/ui';
+import { useAuth } from '@/contexts/AuthContext';
+import { getAuthErrorMessage } from '@/lib/authErrors';
 
 export default function LoginScreen() {
+  const { signIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleLogin = () => router.replace('/(tabs)');
+  const handleLogin = async () => {
+    if (submitting) return;
+    setErrorMessage(null);
+
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail || !password) {
+      setErrorMessage('Preencha e-mail e senha.');
+      return;
+    }
+
+    setSubmitting(true);
+    const { error } = await signIn({ email: trimmedEmail, password });
+    setSubmitting(false);
+
+    if (error) {
+      setErrorMessage(getAuthErrorMessage(error));
+      return;
+    }
+    router.replace('/(tabs)');
+  };
+
   const handleSignUp = () => router.push('/signup');
   const handleForgotPassword = () => {};
   const handleGoogleLogin = () => {};
@@ -74,9 +99,14 @@ export default function LoginScreen() {
               }
             />
 
+            {errorMessage ? (
+              <Text style={styles.errorText}>{errorMessage}</Text>
+            ) : null}
+
             <Button
               label="Entrar"
               onPress={handleLogin}
+              loading={submitting}
               textStyle={styles.primaryButtonText}
               style={styles.primaryButton}
             />
@@ -157,5 +187,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: fontWeight.bold,
     color: colors.primary,
+  },
+  errorText: {
+    color: colors.danger,
+    fontSize: 13,
+    marginBottom: spacing.md,
+    textAlign: 'center',
   },
 });

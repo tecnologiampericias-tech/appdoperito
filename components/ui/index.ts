@@ -2,6 +2,7 @@ export { Screen } from './Screen';
 export { TopBar } from './TopBar';
 export { HeaderBar } from './HeaderBar';
 export { BrandMark } from './BrandMark';
+export { UserMark } from './UserMark';
 export { AuthHeader } from './AuthHeader';
 export { Card } from './Card';
 export { Button, GoogleButton, AppleButton } from './Button';

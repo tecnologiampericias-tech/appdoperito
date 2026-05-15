@@ -11,8 +11,18 @@ import {
   StatusBadge,
   TopBar,
 } from '@/components/ui';
+import { useAuth } from '@/contexts/AuthContext';
+
+function getFirstName(fullName?: string | null) {
+  if (!fullName) return '';
+  return fullName.trim().split(/\s+/)[0] ?? '';
+}
 
 export default function HomeScreen() {
+  const { user } = useAuth();
+  const firstName = getFirstName(user?.user_metadata?.full_name as string | undefined);
+  const greeting = firstName ? `Olá, ${firstName}` : 'Olá';
+
   return (
     <Screen background={colors.bgGreyLight}>
       <TopBar background={colors.bgGreyLight} />
@@ -28,7 +38,7 @@ export default function HomeScreen() {
             color={colors.white}
             size="md"
           />
-          <Text style={styles.heroTitle}>Olá, Dr. Ricardo</Text>
+          <Text style={styles.heroTitle}>{greeting}</Text>
           <Text style={styles.heroSubtitle}>Você tem 4 novas nomeações pendentes.</Text>
 
           <ScrollView
