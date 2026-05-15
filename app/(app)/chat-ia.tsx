@@ -429,7 +429,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   input: {
-    fontSize: 14,
+    fontSize: 16,
     color: colors.text,
     maxHeight: 120,
   },

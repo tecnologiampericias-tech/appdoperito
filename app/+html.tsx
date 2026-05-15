@@ -68,8 +68,9 @@ html, body {
 * {
   -webkit-tap-highlight-color: transparent;
 }
-input, textarea, select {
+input, textarea, select, [contenteditable] {
   font-size: 16px !important;
+  -webkit-text-size-adjust: 100% !important;
 }
 `;
 
