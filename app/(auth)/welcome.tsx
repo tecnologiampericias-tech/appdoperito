@@ -69,6 +69,7 @@ const STORAGE_KEY = '@mpericias:onboarding_seen';
 
 export default function WelcomeScreen() {
   const [currentStep, setCurrentStep] = useState(0);
+  const [prevStep, setPrevStep] = useState(0);
 
   // Animations
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -76,15 +77,28 @@ export default function WelcomeScreen() {
   const iconScale = useRef(new Animated.Value(0.5)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const buttonScale = useRef(new Animated.Value(1)).current;
+  const bgFade = useRef(new Animated.Value(1)).current;
 
   const isLastStep = currentStep === STEPS.length - 1;
   const step = STEPS[currentStep];
+  const prevStepData = STEPS[prevStep];
 
   // Entrance animation for content
   useEffect(() => {
     fadeAnim.setValue(0);
     slideAnim.setValue(30);
     iconScale.setValue(0.3);
+
+    if (currentStep !== prevStep) {
+      bgFade.setValue(0);
+      Animated.timing(bgFade, {
+        toValue: 1,
+        duration: 450,
+        useNativeDriver: false,
+      }).start(() => {
+        setPrevStep(currentStep);
+      });
+    }
 
     Animated.parallel([
       Animated.timing(fadeAnim, {
@@ -105,7 +119,7 @@ export default function WelcomeScreen() {
         useNativeDriver: true,
       }),
     ]).start();
-  }, [currentStep, fadeAnim, slideAnim, iconScale]);
+  }, [currentStep, fadeAnim, slideAnim, iconScale, prevStep, bgFade]);
 
   // Subtle pulsing animation for the background ring
   useEffect(() => {
@@ -161,20 +175,17 @@ export default function WelcomeScreen() {
     router.replace('/login');
   }, [markSeen]);
 
+  const bgColor = bgFade.interpolate({
+    inputRange: [0, 1],
+    outputRange: [prevStepData.accent, step.accent],
+  });
+
   return (
-    <View style={styles.screen}>
+    <Animated.View style={[styles.screen, { backgroundColor: bgColor }]}>
       <StatusBar style="light" />
 
       {/* --- TOP SECTION (Visuals) --- */}
       <View style={styles.topSection}>
-        {/* Dynamic Background */}
-        <Animated.View
-          style={[
-            styles.bgGlow,
-            { backgroundColor: step.accent, opacity: fadeAnim },
-          ]}
-        />
-        
         {/* Header / Brand */}
         <View style={styles.header}>
           <BrandMark variant="onPrimary" label="MPericias" />
@@ -305,18 +316,14 @@ export default function WelcomeScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#0A1118', // Dark elegant background for the top
   },
 
   // -- TOP SECTION --
   topSection: {
-    height: SCREEN_HEIGHT * 0.55,
+    flex: 1,
     width: '100%',
     paddingTop: layout.statusBarTop + spacing.md,
-  },
-  bgGlow: {
-    ...StyleSheet.absoluteFillObject,
-    opacity: 0.15,
+    paddingBottom: spacing.xxl,
   },
   header: {
     flexDirection: 'row',
@@ -370,7 +377,7 @@ const styles = StyleSheet.create({
 
   // -- BOTTOM SECTION --
   bottomSheet: {
-    height: SCREEN_HEIGHT * 0.45,
+    height: SCREEN_HEIGHT * 0.55, // Increased height for more breathing room
     backgroundColor: colors.surface,
     borderTopLeftRadius: 40,
     borderTopRightRadius: 40,
