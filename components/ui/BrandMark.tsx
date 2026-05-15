@@ -32,12 +32,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logo: {
-    width: 40,
-    height: 40,
+    width: 56,
+    height: 56,
   },
   logoOnPrimary: {
-    width: 48,
-    height: 48,
+    width: 88,
+    height: 88,
   },
   logoOnLight: {
     tintColor: colors.primary,

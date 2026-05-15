@@ -30,7 +30,7 @@ const styles = StyleSheet.create({
     marginHorizontal: -spacing.xxl,
   },
   brand: {
-    marginBottom: spacing.xxl,
+    marginBottom: spacing.lg,
   },
   title: {
     fontSize: 28,
