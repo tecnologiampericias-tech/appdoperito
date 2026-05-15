@@ -1,6 +1,6 @@
 import React from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
-import { colors, fontWeight } from '@/constants/theme';
+import { Image, StyleSheet, View } from 'react-native';
+import { colors } from '@/constants/theme';
 
 const LOGO = require('@/assets/images/logo.png');
 
@@ -8,10 +8,9 @@ type Variant = 'onLight' | 'onPrimary';
 
 type Props = {
   variant?: Variant;
-  label?: string;
 };
 
-export function BrandMark({ variant = 'onLight', label = 'Expertise Digital' }: Props) {
+export function BrandMark({ variant = 'onLight' }: Props) {
   const isOnPrimary = variant === 'onPrimary';
   return (
     <View style={styles.row}>
@@ -23,15 +22,6 @@ export function BrandMark({ variant = 'onLight', label = 'Expertise Digital' }: 
         ]}
         resizeMode="contain"
       />
-      <Text
-        style={[
-          styles.label,
-          { color: isOnPrimary ? colors.white : colors.primaryDarker },
-          isOnPrimary && styles.labelOnPrimary,
-        ]}
-      >
-        {label}
-      </Text>
     </View>
   );
 }
@@ -40,26 +30,16 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
   },
   logo: {
-    width: 32,
-    height: 32,
+    width: 40,
+    height: 40,
   },
   logoOnPrimary: {
-    width: 36,
-    height: 36,
+    width: 48,
+    height: 48,
   },
   logoOnLight: {
-    // logo é branca; em fundo claro precisa de tonalidade — tintColor pinta a logo na cor primária
     tintColor: colors.primary,
-  },
-  label: {
-    fontSize: 17,
-    fontWeight: fontWeight.bold,
-  },
-  labelOnPrimary: {
-    fontSize: 20,
-    letterSpacing: 0.3,
   },
 });

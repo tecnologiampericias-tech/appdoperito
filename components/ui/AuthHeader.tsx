@@ -12,7 +12,7 @@ export function AuthHeader({ title, subtitle }: Props) {
   return (
     <View style={styles.header}>
       <View style={styles.brand}>
-        <BrandMark variant="onPrimary" label="MPericias" />
+        <BrandMark variant="onPrimary" />
       </View>
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.subtitle}>{subtitle}</Text>

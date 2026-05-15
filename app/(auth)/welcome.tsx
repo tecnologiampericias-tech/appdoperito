@@ -188,7 +188,7 @@ export default function WelcomeScreen() {
       <View style={styles.topSection}>
         {/* Header / Brand */}
         <View style={styles.header}>
-          <BrandMark variant="onPrimary" label="MPericias" />
+          <BrandMark variant="onPrimary" />
           {!isLastStep && (
             <TouchableOpacity onPress={handleSkip} style={styles.skipBtn}>
               <Text style={styles.skipText}>Pular</Text>
