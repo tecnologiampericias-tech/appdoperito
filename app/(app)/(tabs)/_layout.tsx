@@ -15,14 +15,21 @@ export default function TabLayout() {
         tabBarInactiveTintColor: colors.textPlaceholder,
         headerShown: false,
         tabBarButton: HapticTab,
-        tabBarLabelStyle: { fontSize: 12, fontWeight: '600' },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '600',
+          lineHeight: 16,
+          // marginBottom evita que os descendentes ('g' de Agenda, 'ç' de
+          // Nomeações) batam na borda inferior do tab bar e sejam clipados.
+          marginBottom: 2,
+        },
         tabBarStyle: {
           backgroundColor: colors.surface,
           borderTopWidth: 1,
           borderTopColor: colors.bgBlueGrey,
-          height: 64 + insets.bottom,
-          paddingTop: 6,
-          paddingBottom: 8 + insets.bottom,
+          height: 76 + insets.bottom,
+          paddingTop: 8,
+          paddingBottom: 12 + insets.bottom,
         },
       }}>
       <Tabs.Screen
