@@ -9,8 +9,15 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { Redirect, router } from 'expo-router';
 import * as DocumentPicker from 'expo-document-picker';
 import {
   Button,
@@ -20,12 +27,17 @@ import {
   ModalSheet,
   Screen,
 } from '@/components/ui';
-import { colors, fontWeight, radius, shadow, spacing } from '@/constants/theme';
+import { colors, fontWeight, layout, radius, shadow, spacing } from '@/constants/theme';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import type { MaterialIconName } from '@/types/domain';
 
-type DocumentStatus = 'pending' | 'under_review' | 'approved' | 'rejected';
+type DocumentStatus =
+  | 'pending'
+  | 'ready_to_submit'
+  | 'under_review'
+  | 'approved'
+  | 'rejected';
 
 type DocumentType = {
   id: string;
@@ -53,6 +65,11 @@ type ProfileDocument = {
   rejection_reason: string | null;
   current_upload: CurrentUpload | null;
 };
+
+const DOC_SELECT = `document_type_id, status, current_upload_id, rejection_reason,
+  current_upload:profile_document_uploads!current_upload_id (
+    id, file_name, mime_type, size_bytes, storage_path, created_at
+  )`;
 
 function uuidv4(): string {
   const g = globalThis as { crypto?: { randomUUID?: () => string } };
@@ -95,16 +112,17 @@ function fileIconFor(mime?: string | null): MaterialIconName {
 
 const STATUS_VISUAL: Record<
   DocumentStatus,
-  { label: string; color: string; iconBgTone: 'mintSoft' | 'transparent' }
+  { label: string; color: string }
 > = {
-  pending: { label: 'Pendente envio', color: colors.pending, iconBgTone: 'mintSoft' },
-  under_review: { label: 'Em análise', color: colors.warning, iconBgTone: 'transparent' },
-  approved: { label: 'Aprovado', color: colors.primary, iconBgTone: 'transparent' },
-  rejected: { label: 'Rejeitado — reenviar', color: colors.danger, iconBgTone: 'mintSoft' },
+  pending:         { label: 'Pendente envio',      color: colors.pending },
+  ready_to_submit: { label: 'Pronto para envio',   color: colors.primary },
+  under_review:    { label: 'Em análise',          color: colors.warning },
+  approved:        { label: 'Aprovado',            color: colors.primary },
+  rejected:        { label: 'Rejeitado — reenviar', color: colors.danger },
 };
 
 export default function OnboardingDocumentsScreen() {
-  const { user, onboarding, signOut, refreshOnboarding } = useAuth();
+  const { user, onboarding, onboardingStatus, loading: authLoading, signOut } = useAuth();
   const uid = user?.id ?? null;
 
   const [types, setTypes] = useState<DocumentType[]>([]);
@@ -117,6 +135,13 @@ export default function OnboardingDocumentsScreen() {
   const [viewerTypeId, setViewerTypeId] = useState<string | null>(null);
   const [viewerSignedUrl, setViewerSignedUrl] = useState<string | null>(null);
   const [viewerLoading, setViewerLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitOverlay, setSubmitOverlay] = useState(false);
+
+  const overlayOpacity = useSharedValue(0);
+  const cardOpacity = useSharedValue(0);
+  const cardScale = useSharedValue(0.85);
+  const checkScale = useSharedValue(0);
 
   const reload = useCallback(async () => {
     if (!uid) return;
@@ -126,15 +151,7 @@ export default function OnboardingDocumentsScreen() {
         .from('document_types')
         .select('id, name, description, details, icon, is_required, sort_order')
         .order('sort_order'),
-      supabase
-        .from('profile_documents')
-        .select(
-          `document_type_id, status, current_upload_id, rejection_reason,
-           current_upload:profile_document_uploads!current_upload_id (
-             id, file_name, mime_type, size_bytes, storage_path, created_at
-           )`,
-        )
-        .eq('profile_id', uid),
+      supabase.from('profile_documents').select(DOC_SELECT).eq('profile_id', uid),
     ]);
 
     if (typesResp.error || docsResp.error) {
@@ -156,7 +173,9 @@ export default function OnboardingDocumentsScreen() {
     void reload();
   }, [reload]);
 
-  // Mantém o estado local sincronizado quando o admin aprova/rejeita externamente.
+  // Realtime: quando o admin aprovar/rejeitar (ou qualquer mudança remota),
+  // re-busca SOMENTE a linha alterada e atualiza o card específico — evita
+  // o flash de full-reload.
   useEffect(() => {
     if (!uid) return;
     const channel = supabase
@@ -169,26 +188,75 @@ export default function OnboardingDocumentsScreen() {
           table: 'profile_documents',
           filter: `profile_id=eq.${uid}`,
         },
-        () => {
-          void reload();
+        async (payload) => {
+          const newRow = payload.new as { document_type_id?: string } | null;
+          const oldRow = payload.old as { document_type_id?: string } | null;
+          const typeId = newRow?.document_type_id ?? oldRow?.document_type_id;
+          if (!typeId) return;
+          const { data } = await supabase
+            .from('profile_documents')
+            .select(DOC_SELECT)
+            .eq('profile_id', uid)
+            .eq('document_type_id', typeId)
+            .maybeSingle<ProfileDocument>();
+          if (data) {
+            setDocs((prev) => ({ ...prev, [typeId]: data }));
+          }
         },
       )
       .subscribe();
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [uid, reload]);
+  }, [uid]);
+
+  // Animação do overlay de sucesso + navegação após.
+  useEffect(() => {
+    if (!submitOverlay) return;
+    overlayOpacity.value = withTiming(1, { duration: 260 });
+    cardOpacity.value = withDelay(80, withTiming(1, { duration: 240 }));
+    cardScale.value = withDelay(80, withSpring(1, { damping: 14, stiffness: 130 }));
+    checkScale.value = withDelay(360, withSpring(1, { damping: 8, stiffness: 150 }));
+
+    const timer = setTimeout(() => {
+      router.replace('/(app)/(tabs)');
+    }, 2700);
+    return () => clearTimeout(timer);
+  }, [submitOverlay, overlayOpacity, cardOpacity, cardScale, checkScale]);
+
+  const overlayStyle = useAnimatedStyle(() => ({ opacity: overlayOpacity.value }));
+  const cardStyle = useAnimatedStyle(() => ({
+    opacity: cardOpacity.value,
+    transform: [{ scale: cardScale.value }],
+  }));
+  const checkStyle = useAnimatedStyle(() => ({ transform: [{ scale: checkScale.value }] }));
 
   const requiredTypes = useMemo(() => types.filter((t) => t.is_required), [types]);
   const optionalTypes = useMemo(() => types.filter((t) => !t.is_required), [types]);
 
-  const requiredSubmittedCount = useMemo(
+  const requiredWithFileCount = useMemo(
     () =>
       requiredTypes.filter((t) => {
         const s = docs[t.id]?.status;
-        return s === 'under_review' || s === 'approved';
+        return s === 'ready_to_submit' || s === 'under_review' || s === 'approved';
       }).length,
     [requiredTypes, docs],
+  );
+
+  const hasAnythingToSubmit = useMemo(
+    () => Object.values(docs).some((d) => d.status === 'ready_to_submit'),
+    [docs],
+  );
+
+  const canSubmit =
+    requiredTypes.length > 0 &&
+    requiredWithFileCount === requiredTypes.length &&
+    hasAnythingToSubmit &&
+    !submitting;
+
+  const rejectedCount = useMemo(
+    () => Object.values(docs).filter((d) => d.status === 'rejected').length,
+    [docs],
   );
 
   const handleAttach = useCallback(
@@ -230,14 +298,14 @@ export default function OnboardingDocumentsScreen() {
           file_name: asset.name ?? `${type.id}.${ext}`,
           mime_type: asset.mimeType ?? null,
           size_bytes: asset.size ?? null,
-          status_at_upload: 'under_review',
+          status_at_upload: 'ready_to_submit',
         });
         if (insertResp.error) throw insertResp.error;
 
         const updateResp = await supabase
           .from('profile_documents')
           .update({
-            status: 'under_review',
+            status: 'ready_to_submit',
             current_upload_id: uploadId,
             rejection_reason: null,
           })
@@ -245,8 +313,23 @@ export default function OnboardingDocumentsScreen() {
           .eq('document_type_id', type.id);
         if (updateResp.error) throw updateResp.error;
 
-        await reload();
-        await refreshOnboarding();
+        // Atualização inline — substitui o card SEM reload geral. O realtime
+        // pode disparar logo depois com os mesmos dados (idempotente).
+        const newDoc: ProfileDocument = {
+          document_type_id: type.id,
+          status: 'ready_to_submit',
+          current_upload_id: uploadId,
+          rejection_reason: null,
+          current_upload: {
+            id: uploadId,
+            file_name: asset.name ?? `${type.id}.${ext}`,
+            mime_type: asset.mimeType ?? null,
+            size_bytes: asset.size ?? null,
+            storage_path: storagePath,
+            created_at: new Date().toISOString(),
+          },
+        };
+        setDocs((prev) => ({ ...prev, [type.id]: newDoc }));
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Erro desconhecido.';
         Alert.alert('Não foi possível enviar', message);
@@ -254,21 +337,50 @@ export default function OnboardingDocumentsScreen() {
         setUploadingId(null);
       }
     },
-    [uid, uploadingId, reload, refreshOnboarding],
+    [uid, uploadingId],
   );
 
-  const handleView = useCallback(async (typeId: string) => {
-    const doc = docs[typeId];
-    if (!doc?.current_upload) return;
-    setViewerTypeId(typeId);
-    setViewerSignedUrl(null);
-    setViewerLoading(true);
-    const { data } = await supabase.storage
-      .from('profile-documents')
-      .createSignedUrl(doc.current_upload.storage_path, 300);
-    setViewerSignedUrl(data?.signedUrl ?? null);
-    setViewerLoading(false);
-  }, [docs]);
+  const handleSubmitAll = useCallback(async () => {
+    if (!uid || submitting || !canSubmit) return;
+    setSubmitting(true);
+    // Liga overlay ANTES da query para suprimir o redirect do gate quando
+    // o status agregado mudar de incomplete → under_review.
+    setSubmitOverlay(true);
+
+    const { error: submitError } = await supabase
+      .from('profile_documents')
+      .update({ status: 'under_review' })
+      .eq('profile_id', uid)
+      .eq('status', 'ready_to_submit');
+
+    if (submitError) {
+      setSubmitOverlay(false);
+      setSubmitting(false);
+      // Reset animação para a próxima tentativa.
+      overlayOpacity.value = 0;
+      cardOpacity.value = 0;
+      cardScale.value = 0.85;
+      checkScale.value = 0;
+      Alert.alert('Não foi possível enviar', submitError.message);
+    }
+    // No sucesso, o useEffect[submitOverlay] cuida da animação + navegação.
+  }, [uid, submitting, canSubmit, overlayOpacity, cardOpacity, cardScale, checkScale]);
+
+  const handleView = useCallback(
+    async (typeId: string) => {
+      const doc = docs[typeId];
+      if (!doc?.current_upload) return;
+      setViewerTypeId(typeId);
+      setViewerSignedUrl(null);
+      setViewerLoading(true);
+      const { data } = await supabase.storage
+        .from('profile-documents')
+        .createSignedUrl(doc.current_upload.storage_path, 300);
+      setViewerSignedUrl(data?.signedUrl ?? null);
+      setViewerLoading(false);
+    },
+    [docs],
+  );
 
   const handleSignOut = useCallback(async () => {
     setSigningOut(true);
@@ -279,12 +391,25 @@ export default function OnboardingDocumentsScreen() {
     }
   }, [signOut]);
 
+  // Gate: aguarda auth, mas com submitOverlay aberto mantém a tela montada
+  // mesmo se status sair de incomplete (animação até navegar manualmente).
+  if (authLoading) {
+    return (
+      <View style={styles.fullCenter}>
+        <ActivityIndicator color={colors.primary} />
+      </View>
+    );
+  }
+  if (onboardingStatus !== 'documents_incomplete' && !submitOverlay) {
+    return <Redirect href="/(app)/(tabs)" />;
+  }
+
   const viewerType = viewerTypeId ? types.find((t) => t.id === viewerTypeId) ?? null : null;
   const viewerDoc = viewerTypeId ? docs[viewerTypeId] ?? null : null;
   const viewerFile = viewerDoc?.current_upload ?? null;
 
   const total = requiredTypes.length;
-  const progress = total === 0 ? 0 : requiredSubmittedCount / total;
+  const progress = total === 0 ? 0 : requiredWithFileCount / total;
 
   return (
     <Screen background={colors.bgGreyMint} statusBar="light">
@@ -313,9 +438,8 @@ export default function OnboardingDocumentsScreen() {
         <View style={styles.intro}>
           <Text style={styles.introTitle}>Dossiê do Perito</Text>
           <Text style={styles.introSubtitle}>
-            Para liberar o app, envie todos os documentos obrigatórios. Eles entram
-            em análise e, assim que aprovados, sua conta fica liberada para receber
-            perícias.
+            Anexe todos os documentos obrigatórios e clique em "Enviar para análise".
+            Sua conta fica liberada assim que nossa equipe aprovar.
           </Text>
         </View>
 
@@ -323,16 +447,16 @@ export default function OnboardingDocumentsScreen() {
           <View style={styles.progressHeader}>
             <Text style={styles.progressLabel}>Progresso obrigatório</Text>
             <Text style={styles.progressCount}>
-              {requiredSubmittedCount} de {total} enviados
+              {requiredWithFileCount} de {total} anexados
             </Text>
           </View>
           <View style={styles.progressTrack}>
             <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
           </View>
-          {onboarding && onboarding.rejectedCount > 0 ? (
+          {rejectedCount > 0 ? (
             <Text style={styles.rejectionNote}>
-              {onboarding.rejectedCount} documento{onboarding.rejectedCount > 1 ? 's' : ''} rejeitado
-              {onboarding.rejectedCount > 1 ? 's' : ''} — reveja abaixo e reenvie.
+              {rejectedCount} documento{rejectedCount > 1 ? 's' : ''} rejeitado
+              {rejectedCount > 1 ? 's' : ''} — reveja abaixo e reenvie.
             </Text>
           ) : null}
         </Card>
@@ -344,7 +468,12 @@ export default function OnboardingDocumentsScreen() {
         ) : error ? (
           <View style={styles.errorBlock}>
             <Text style={styles.errorText}>{error}</Text>
-            <Button label="Tentar novamente" variant="outlineMint" size="md" onPress={() => void reload()} />
+            <Button
+              label="Tentar novamente"
+              variant="outlineMint"
+              size="md"
+              onPress={() => void reload()}
+            />
           </View>
         ) : (
           <>
@@ -366,7 +495,7 @@ export default function OnboardingDocumentsScreen() {
               <>
                 <Text style={styles.sectionTitle}>Documentos adicionais (se aplicável)</Text>
                 <Text style={styles.sectionSubtitle}>
-                  Envie apenas se a sua situação se enquadrar. Não bloqueiam o acesso ao app.
+                  Envie apenas se sua situação se enquadrar. Não bloqueiam o acesso ao app.
                 </Text>
                 <View style={styles.docsList}>
                   {optionalTypes.map((type) => (
@@ -386,27 +515,33 @@ export default function OnboardingDocumentsScreen() {
           </>
         )}
 
-        <TouchableOpacity
-          style={styles.helpCard}
-          activeOpacity={0.9}
-          onPress={() => router.push('/(app)/chat-ia')}
-        >
-          <View style={styles.helpAvatar}>
-            <MaterialCommunityIcons name="robot-happy" size={26} color={colors.white} />
-            <View style={styles.helpAvatarDot} />
-          </View>
-          <View style={styles.helpContent}>
-            <Text style={styles.helpEyebrow}>ASSISTENTE IA</Text>
-            <Text style={styles.helpTitle}>Tirar dúvidas com a Mia</Text>
-            <Text style={styles.helpText}>
-              Resposta em segundos sobre documentos, prazos e como emitir cada certidão.
-            </Text>
-          </View>
-          <View style={styles.helpChevron}>
-            <Ionicons name="chevron-forward" size={18} color={colors.white} />
-          </View>
-        </TouchableOpacity>
+        <View style={{ height: spacing.huge }} />
       </ScrollView>
+
+      <View style={styles.footer}>
+        <TouchableOpacity
+          style={[styles.footerPrimary, !canSubmit && styles.footerPrimaryDisabled]}
+          onPress={handleSubmitAll}
+          activeOpacity={0.85}
+          disabled={!canSubmit}
+        >
+          {submitting ? (
+            <ActivityIndicator color={colors.white} />
+          ) : (
+            <>
+              <Text style={styles.footerPrimaryText}>ENVIAR PARA ANÁLISE</Text>
+              <Ionicons name="chevron-forward" size={16} color={colors.white} />
+            </>
+          )}
+        </TouchableOpacity>
+        {!canSubmit && !submitting ? (
+          <Text style={styles.footerHint}>
+            {rejectedCount > 0
+              ? 'Reenvie os documentos rejeitados para liberar o envio.'
+              : `Faltam ${Math.max(total - requiredWithFileCount, 0)} documento(s) obrigatório(s).`}
+          </Text>
+        ) : null}
+      </View>
 
       <ModalSheet visible={!!detailsType} onClose={() => setDetailsType(null)}>
         {detailsType && (
@@ -510,6 +645,21 @@ export default function OnboardingDocumentsScreen() {
           </>
         )}
       </ModalSheet>
+
+      {submitOverlay ? (
+        <Animated.View pointerEvents="auto" style={[styles.overlay, overlayStyle]}>
+          <Animated.View style={[styles.overlayCard, cardStyle]}>
+            <Animated.View style={[styles.checkBadge, checkStyle]}>
+              <Ionicons name="checkmark" size={56} color={colors.white} />
+            </Animated.View>
+            <Text style={styles.overlayTitle}>Cadastro enviado!</Text>
+            <Text style={styles.overlaySubtitle}>
+              Sua documentação está em análise. Você receberá uma resposta em breve.
+            </Text>
+            <ActivityIndicator color={colors.primary} style={styles.overlaySpinner} />
+          </Animated.View>
+        </Animated.View>
+      ) : null}
     </Screen>
   );
 }
@@ -534,9 +684,15 @@ function DocumentCard({ type, doc, uploading, onAttach, onView, onInfo }: Docume
   return (
     <View style={styles.docCard}>
       <TouchableOpacity style={styles.docMain} activeOpacity={0.7} onPress={onInfo}>
-        <IconBadge size="md" tone={visual.iconBgTone} style={styles.docIcon}>
+        <IconBadge
+          size="md"
+          tone={status === 'approved' || status === 'ready_to_submit' ? 'transparent' : 'mintSoft'}
+          style={styles.docIcon}
+        >
           {status === 'approved' ? (
             <Ionicons name="checkmark-circle" size={26} color={colors.primary} />
+          ) : status === 'ready_to_submit' ? (
+            <Ionicons name="cloud-done-outline" size={24} color={colors.primary} />
           ) : status === 'rejected' ? (
             <Ionicons name="alert-circle" size={24} color={colors.danger} />
           ) : (
@@ -586,10 +742,16 @@ function DocumentCard({ type, doc, uploading, onAttach, onView, onInfo }: Docume
 }
 
 const styles = StyleSheet.create({
+  fullCenter: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.bgGreyMint,
+  },
   scrollContent: {
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.xl,
-    paddingBottom: spacing.huge,
+    paddingBottom: 120,
   },
   intro: {
     marginBottom: 18,
@@ -761,69 +923,45 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  helpCard: {
-    backgroundColor: colors.primaryDark,
-    borderRadius: radius.card,
-    paddingVertical: spacing.lg,
-    paddingHorizontal: spacing.lg,
+  footer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: colors.surface,
+    paddingHorizontal: spacing.xl,
+    paddingTop: 14,
+    paddingBottom: layout.iosBottomSafe,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    ...shadow.topBarUp,
+  },
+  footerPrimary: {
     flexDirection: 'row',
     alignItems: 'center',
-    shadowColor: colors.primaryDark,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.25,
-    shadowRadius: 16,
-    elevation: 6,
-    marginTop: spacing.md,
-  },
-  helpAvatar: {
-    width: 48,
-    height: 48,
-    borderRadius: radius.xxl,
-    backgroundColor: colors.onPrimary16,
-    alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 14,
+    backgroundColor: colors.primary,
+    paddingHorizontal: 28,
+    paddingVertical: 14,
+    borderRadius: 28,
+    gap: 6,
+    ...shadow.primary,
   },
-  helpAvatarDot: {
-    position: 'absolute',
-    bottom: 6,
-    right: 6,
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: colors.onlineDot,
-    borderWidth: 2,
-    borderColor: colors.primaryDark,
+  footerPrimaryDisabled: {
+    backgroundColor: colors.primaryDisabled,
+    ...shadow.none,
   },
-  helpContent: {
-    flex: 1,
-    paddingRight: spacing.sm,
-  },
-  helpEyebrow: {
-    fontSize: 10,
-    fontWeight: fontWeight.black,
-    color: colors.onPrimary75,
-    letterSpacing: 1.2,
-    marginBottom: 4,
-  },
-  helpTitle: {
-    fontSize: 15,
-    fontWeight: fontWeight.black,
+  footerPrimaryText: {
+    fontSize: 13,
+    fontWeight: fontWeight.bold,
     color: colors.white,
-    marginBottom: 4,
+    letterSpacing: 0.5,
   },
-  helpText: {
-    fontSize: 12,
-    color: colors.onPrimary85,
-    lineHeight: 17,
-  },
-  helpChevron: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: colors.onPrimary18,
-    alignItems: 'center',
-    justifyContent: 'center',
+  footerHint: {
+    marginTop: 8,
+    fontSize: 11,
+    color: colors.textMuted,
+    textAlign: 'center',
   },
   modalIcon: {
     marginBottom: 14,
@@ -930,5 +1068,60 @@ const styles = StyleSheet.create({
   },
   viewerBtn: {
     flex: 1,
+  },
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: colors.overlay,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.xxl,
+  },
+  overlayCard: {
+    width: '100%',
+    maxWidth: 360,
+    backgroundColor: colors.surface,
+    borderRadius: radius.hero ?? 24,
+    paddingHorizontal: spacing.xxl,
+    paddingVertical: spacing.huge,
+    alignItems: 'center',
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.18,
+    shadowRadius: 28,
+    elevation: 12,
+  },
+  checkBadge: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.xl,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.35,
+    shadowRadius: 18,
+    elevation: 8,
+  },
+  overlayTitle: {
+    fontSize: 20,
+    fontWeight: fontWeight.black,
+    color: colors.text,
+    marginBottom: spacing.sm,
+    textAlign: 'center',
+  },
+  overlaySubtitle: {
+    fontSize: 13,
+    color: colors.textBody,
+    lineHeight: 19,
+    textAlign: 'center',
+  },
+  overlaySpinner: {
+    marginTop: spacing.lg,
   },
 });

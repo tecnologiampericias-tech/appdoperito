@@ -34,6 +34,7 @@ export type OnboardingState = {
   status: OnboardingStatus;
   pendingCount: number;
   rejectedCount: number;
+  readyToSubmitCount: number;
   underReviewCount: number;
   approvedCount: number;
   requiredTotal: number;
@@ -62,6 +63,7 @@ type OnboardingRow = {
   onboarding_status: OnboardingStatus;
   pending_count: number;
   rejected_count: number;
+  ready_to_submit_count: number;
   under_review_count: number;
   approved_count: number;
   required_total: number;
@@ -77,6 +79,7 @@ function fallbackOnboarding(userId: string): OnboardingState {
     status: 'documents_incomplete',
     pendingCount: 0,
     rejectedCount: 0,
+    readyToSubmitCount: 0,
     underReviewCount: 0,
     approvedCount: 0,
     requiredTotal: 0,
@@ -87,7 +90,7 @@ async function fetchOnboardingFor(userId: string): Promise<OnboardingState> {
   const { data, error } = await supabase
     .from('profile_onboarding_status')
     .select(
-      'profile_id, onboarding_status, pending_count, rejected_count, under_review_count, approved_count, required_total',
+      'profile_id, onboarding_status, pending_count, rejected_count, ready_to_submit_count, under_review_count, approved_count, required_total',
     )
     .eq('profile_id', userId)
     .maybeSingle<OnboardingRow>();
@@ -98,6 +101,7 @@ async function fetchOnboardingFor(userId: string): Promise<OnboardingState> {
     status: data.onboarding_status,
     pendingCount: data.pending_count,
     rejectedCount: data.rejected_count,
+    readyToSubmitCount: data.ready_to_submit_count,
     underReviewCount: data.under_review_count,
     approvedCount: data.approved_count,
     requiredTotal: data.required_total,

@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { colors } from '@/constants/theme';
 
 export default function OnboardingLayout() {
-  const { session, loading, onboardingStatus } = useAuth();
+  const { session, loading } = useAuth();
 
   if (loading) {
     return (
@@ -25,9 +25,8 @@ export default function OnboardingLayout() {
     return <Redirect href="/login" />;
   }
 
-  if (onboardingStatus !== 'documents_incomplete') {
-    return <Redirect href="/(app)/(tabs)" />;
-  }
-
+  // O gate por onboardingStatus é feito dentro da própria tela documents.tsx
+  // para que a animação de "Enviar para análise" não seja interrompida
+  // quando o status flippa de incomplete → under_review.
   return <Stack screenOptions={{ headerShown: false }} />;
 }
