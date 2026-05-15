@@ -210,19 +210,19 @@ export default function OnboardingDocumentsScreen() {
     };
   }, [uid]);
 
-  // Animação do overlay de sucesso + navegação após.
+  // Animação do overlay de sucesso. Não navega sozinho — o usuário precisa
+  // clicar em "Ir para o app" pra concluir.
   useEffect(() => {
     if (!submitOverlay) return;
     overlayOpacity.value = withTiming(1, { duration: 260 });
     cardOpacity.value = withDelay(80, withTiming(1, { duration: 240 }));
     cardScale.value = withDelay(80, withSpring(1, { damping: 14, stiffness: 130 }));
     checkScale.value = withDelay(360, withSpring(1, { damping: 8, stiffness: 150 }));
-
-    const timer = setTimeout(() => {
-      router.replace('/(app)/(tabs)');
-    }, 2700);
-    return () => clearTimeout(timer);
   }, [submitOverlay, overlayOpacity, cardOpacity, cardScale, checkScale]);
+
+  const handleFinishOnboarding = useCallback(() => {
+    router.replace('/(app)/(tabs)');
+  }, []);
 
   const overlayStyle = useAnimatedStyle(() => ({ opacity: overlayOpacity.value }));
   const cardStyle = useAnimatedStyle(() => ({
@@ -650,17 +650,40 @@ export default function OnboardingDocumentsScreen() {
         <Animated.View pointerEvents="auto" style={[styles.overlay, overlayStyle]}>
           <Animated.View style={[styles.overlayCard, cardStyle]}>
             <Animated.View style={[styles.checkBadge, checkStyle]}>
-              <Ionicons name="checkmark" size={56} color={colors.white} />
+              <Ionicons name="checkmark" size={52} color={colors.white} />
             </Animated.View>
             <Text style={styles.overlayTitle}>Cadastro enviado!</Text>
             <Text style={styles.overlaySubtitle}>
-              Sua documentação está em análise. Você receberá uma resposta em breve.
+              Sua documentação está em análise. Assim que aprovada, você terá acesso completo a:
             </Text>
-            <ActivityIndicator color={colors.primary} style={styles.overlaySpinner} />
+            <View style={styles.benefitsList}>
+              <BenefitRow text="Receber nomeações dos tribunais cadastrados" />
+              <BenefitRow text="Organizar sua agenda de perícias em um só lugar" />
+              <BenefitRow text="Emitir e enviar laudos com apoio da IA Mia" />
+              <BenefitRow text="Acompanhar prazos, status e honorários de cada caso" />
+              <BenefitRow text="Suporte direto da equipe MPericias quando precisar" />
+            </View>
+            <Button
+              label="Ir para o app"
+              size="md"
+              onPress={handleFinishOnboarding}
+              style={styles.overlayButton}
+            />
           </Animated.View>
         </Animated.View>
       ) : null}
     </Screen>
+  );
+}
+
+function BenefitRow({ text }: { text: string }) {
+  return (
+    <View style={styles.benefitRow}>
+      <View style={styles.benefitCheck}>
+        <Ionicons name="checkmark" size={12} color={colors.white} />
+      </View>
+      <Text style={styles.benefitText}>{text}</Text>
+    </View>
   );
 }
 
@@ -1082,11 +1105,11 @@ const styles = StyleSheet.create({
   },
   overlayCard: {
     width: '100%',
-    maxWidth: 360,
+    maxWidth: 380,
     backgroundColor: colors.surface,
     borderRadius: radius.hero ?? 24,
     paddingHorizontal: spacing.xxl,
-    paddingVertical: spacing.huge,
+    paddingVertical: spacing.xxl,
     alignItems: 'center',
     shadowColor: colors.black,
     shadowOffset: { width: 0, height: 12 },
@@ -1095,13 +1118,13 @@ const styles = StyleSheet.create({
     elevation: 12,
   },
   checkBadge: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
+    width: 76,
+    height: 76,
+    borderRadius: 38,
     backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.xl,
+    marginBottom: spacing.lg,
     shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.35,
@@ -1120,8 +1143,35 @@ const styles = StyleSheet.create({
     color: colors.textBody,
     lineHeight: 19,
     textAlign: 'center',
+    marginBottom: spacing.lg,
   },
-  overlaySpinner: {
-    marginTop: spacing.lg,
+  benefitsList: {
+    alignSelf: 'stretch',
+    gap: 10,
+    marginBottom: spacing.xl,
+  },
+  benefitRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+  },
+  benefitCheck: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 1,
+  },
+  benefitText: {
+    flex: 1,
+    fontSize: 13,
+    color: colors.text,
+    lineHeight: 18,
+  },
+  overlayButton: {
+    alignSelf: 'stretch',
+    ...shadow.primary,
   },
 });
