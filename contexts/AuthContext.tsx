@@ -112,27 +112,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [onboarding, setOnboarding] = useState<OnboardingState | null>(null);
   const [bootstrapLoading, setBootstrapLoading] = useState(true);
-  const [onboardingLoading, setOnboardingLoading] = useState(false);
   const onboardingReqRef = useRef(0);
 
   const userId = session?.user?.id ?? null;
 
+  // Refresh roda em segundo plano: NÃO toca em nenhuma flag de loading, pra
+  // não disparar o spinner full-screen dos layouts quando o realtime chega
+  // após um upload. O "loading inicial" é coberto por `onboardingReadyForSession`.
   const refreshOnboarding = useCallback(async () => {
     if (!userId) {
       setOnboarding(null);
       return;
     }
     const reqId = ++onboardingReqRef.current;
-    setOnboardingLoading(true);
-    try {
-      const result = await fetchOnboardingFor(userId);
-      if (onboardingReqRef.current !== reqId) return;
-      setOnboarding(result);
-    } finally {
-      if (onboardingReqRef.current === reqId) {
-        setOnboardingLoading(false);
-      }
-    }
+    const result = await fetchOnboardingFor(userId);
+    if (onboardingReqRef.current !== reqId) return;
+    setOnboarding(result);
   }, [userId]);
 
   useEffect(() => {
@@ -214,7 +209,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const onboardingReadyForSession =
     !userId || (onboarding !== null && onboarding.userId === userId);
 
-  const loading = bootstrapLoading || !onboardingReadyForSession || onboardingLoading;
+  const loading = bootstrapLoading || !onboardingReadyForSession;
 
   const value = useMemo<AuthContextValue>(
     () => ({
