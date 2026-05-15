@@ -28,6 +28,7 @@ export default function Root({ children }: PropsWithChildren) {
         <meta name="mobile-web-app-capable" content="yes" />
 
         <ScrollViewStyleReset />
+        <script dangerouslySetInnerHTML={{ __html: zoomGuard }} />
         <script dangerouslySetInnerHTML={{ __html: swRegister }} />
       </head>
       <body>{children}</body>
@@ -35,6 +36,26 @@ export default function Root({ children }: PropsWithChildren) {
   );
 }
 
+// =====================================================================
+// CSS anti-zoom — três redes de segurança contra zoom não desejado:
+//
+// 1) Viewport meta (no <head> acima) com user-scalable=no — pega Chrome
+//    Android. Ignorado pelo iOS Safari desde a 10 por acessibilidade.
+//
+// 2) input/textarea/select com font-size: 16px !important — bloqueia o
+//    "focus zoom" do iOS Safari, que ocorre sempre que o usuário toca em
+//    um <input> com font-size < 16px. O !important é CRÍTICO porque o
+//    React Native Web injeta `font-size` inline em cada TextInput (vem do
+//    style.fontSize do componente), e inline styles vencem CSS normal.
+//    Sem !important, qualquer input com `fontSize: 14` ou `15` no RN traz
+//    o bug de volta.
+//
+// 3) touch-action: pan-x pan-y em html/body — bloqueia pinch-zoom e
+//    double-tap-zoom no nível do browser (Android principalmente).
+//
+// Camada extra em JS (zoomGuard) trata os gestos do iOS que escapam de 1
+// a 3.
+// =====================================================================
 const appShellCss = `
 html, body {
   height: 100%;
@@ -48,8 +69,26 @@ html, body {
   -webkit-tap-highlight-color: transparent;
 }
 input, textarea, select {
-  font-size: 16px;
+  font-size: 16px !important;
 }
+`;
+
+// 4) Quarta rede: bloqueia explicitamente os eventos de gesto multi-touch
+//    do iOS (gesturestart/gesturechange/gestureend) — essa é a UNICA
+//    forma confiável de impedir pinch-zoom no iOS Safari moderno. Também
+//    bloqueia o pinch-zoom de desktop via Ctrl+scroll, que aparece quando
+//    se testa no DevTools com viewport mobile.
+const zoomGuard = `
+(function () {
+  if (typeof document === 'undefined') return;
+  var prevent = function (e) { e.preventDefault(); };
+  document.addEventListener('gesturestart', prevent, { passive: false });
+  document.addEventListener('gesturechange', prevent, { passive: false });
+  document.addEventListener('gestureend', prevent, { passive: false });
+  window.addEventListener('wheel', function (e) {
+    if (e.ctrlKey) e.preventDefault();
+  }, { passive: false });
+})();
 `;
 
 const swRegister = `
