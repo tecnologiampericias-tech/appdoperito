@@ -12,17 +12,19 @@ import {
   View,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { Screen } from '@/components/ui';
 import { colors, fontWeight, layout, radius, shadow, spacing } from '@/constants/theme';
 import { FAQ, HUMAN_SUPPORT_URL } from '@/data/faq';
 import type { ChatMessage, FaqItem } from '@/types/domain';
 
 export default function ChatIAScreen() {
+  const params = useLocalSearchParams<{ q?: string }>();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isThinking, setIsThinking] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
+  const autoSentRef = useRef(false);
 
   const hasConversation = messages.length > 0;
 
@@ -40,6 +42,20 @@ export default function ChatIAScreen() {
       return () => clearTimeout(id);
     }
   }, [messages, hasConversation, isThinking]);
+
+  // Quando a tela é aberta com ?q=... (ex.: chip de FAQ da home), envia a
+  // pergunta automaticamente uma única vez. Se ela bate com uma entrada do
+  // FAQ, usa a resposta preset; senão, deixa a Mia responder pelo fallback.
+  useEffect(() => {
+    if (autoSentRef.current) return;
+    const raw = params.q;
+    const q = typeof raw === 'string' ? raw.trim() : '';
+    if (!q) return;
+    autoSentRef.current = true;
+    const matched = FAQ.find((item) => item.question === q);
+    sendMessage(q, matched?.answer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.q]);
 
   const sendMessage = (text: string, presetAnswer?: string) => {
     const trimmed = text.trim();

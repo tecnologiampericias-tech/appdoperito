@@ -1,10 +1,9 @@
 import React from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { colors, fontWeight, radius, shadow, spacing } from '@/constants/theme';
 import {
-  Button,
-  Card,
   IconBadge,
   Screen,
   SectionHeader,
@@ -12,6 +11,7 @@ import {
   TopBar,
 } from '@/components/ui';
 import { useAuth } from '@/contexts/AuthContext';
+import { HOME_QUICK_FAQ } from '@/data/faq';
 
 function getFirstName(fullName?: string | null) {
   if (!fullName) return '';
@@ -22,6 +22,10 @@ export default function HomeScreen() {
   const { user } = useAuth();
   const firstName = getFirstName(user?.user_metadata?.full_name as string | undefined);
   const greeting = firstName ? `Olá, ${firstName}` : 'Olá';
+
+  const openMiaChat = () => router.push('/(app)/chat-ia');
+  const askMia = (question: string) =>
+    router.push({ pathname: '/(app)/chat-ia', params: { q: question } });
 
   return (
     <Screen background={colors.bgGreyLight}>
@@ -52,32 +56,43 @@ export default function HomeScreen() {
           </ScrollView>
         </View>
 
-        <SectionHeader title="Próxima Perícia" actionLabel="Ver Agenda" />
+        <SectionHeader
+          title="Pergunte para a Mia"
+          actionLabel="Abrir chat"
+          onAction={openMiaChat}
+        />
 
-        <Card>
-          <View style={styles.caseHeader}>
-            <IconBadge size="lg">
-              <MaterialCommunityIcons name="briefcase-outline" size={22} color={colors.primary} />
-            </IconBadge>
-            <View style={styles.caseHeaderText}>
-              <Text style={styles.caseNumber}>Caso #4829-23</Text>
-              <Text style={styles.casePatient}>Paciente: Maria Silva Santos</Text>
+        <TouchableOpacity
+          style={styles.miaCard}
+          activeOpacity={0.92}
+          onPress={openMiaChat}
+        >
+          <View style={styles.miaHeader}>
+            <View style={styles.miaAvatar}>
+              <MaterialCommunityIcons name="robot-happy" size={22} color={colors.white} />
+              <View style={styles.miaAvatarDot} />
             </View>
-            <StatusBadge label="URGENTE" tone="success" />
+            <View style={styles.miaHeaderText}>
+              <Text style={styles.miaEyebrow}>ASSISTENTE IA · ONLINE</Text>
+              <Text style={styles.miaTitle}>Mia responde em segundos</Text>
+              <Text style={styles.miaSubtitle}>
+                Tire dúvidas sobre nomeações, laudos e pagamentos.
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={colors.textPlaceholder} />
           </View>
 
-          <View style={styles.infoRow}>
-            <InfoBox label="DATA E HORA" icon="calendar-outline" value="Amanhã, 09:30" />
-            <InfoBox label="LOCALIZAÇÃO" icon="location-outline" value="Clínica Central" />
+          <View style={styles.faqList}>
+            {HOME_QUICK_FAQ.map((question, idx) => (
+              <FaqQuickRow
+                key={question}
+                question={question}
+                withDivider={idx > 0}
+                onPress={() => askMia(question)}
+              />
+            ))}
           </View>
-
-          <Text style={styles.caseDescription}>
-            Perícia solicitada pela 4ª Vara Federal para avaliação de incapacidade laborativa
-            temporária (Ortopedia).
-          </Text>
-
-          <Button label="Ver Detalhes do Processo" size="md" />
-        </Card>
+        </TouchableOpacity>
 
         <Text style={styles.sectionSolo}>Ações Rápidas</Text>
 
@@ -90,32 +105,36 @@ export default function HomeScreen() {
   );
 }
 
+function FaqQuickRow({
+  question,
+  withDivider,
+  onPress,
+}: {
+  question: string;
+  withDivider: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <TouchableOpacity
+      style={[styles.faqRow, withDivider && styles.faqRowDivider]}
+      activeOpacity={0.7}
+      onPress={onPress}
+    >
+      <MaterialCommunityIcons name="lightbulb-on-outline" size={16} color={colors.primary} />
+      <Text style={styles.faqQuestion} numberOfLines={2}>
+        {question}
+      </Text>
+      <Ionicons name="chevron-forward" size={14} color={colors.textPlaceholder} />
+    </TouchableOpacity>
+  );
+}
+
 function Stat({ value, label, labelSm }: { value: string; label: string; labelSm?: string }) {
   return (
     <View style={styles.statCard}>
       <Text style={styles.statValue}>{value}</Text>
       <Text style={styles.statLabel}>{label}</Text>
       {labelSm ? <Text style={styles.statLabel}>{labelSm}</Text> : null}
-    </View>
-  );
-}
-
-function InfoBox({
-  label,
-  icon,
-  value,
-}: {
-  label: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  value: string;
-}) {
-  return (
-    <View style={styles.infoBox}>
-      <Text style={styles.infoLabel}>{label}</Text>
-      <View style={styles.infoValueRow}>
-        <Ionicons name={icon} size={15} color={colors.primary} />
-        <Text style={styles.infoValue}>{value}</Text>
-      </View>
     </View>
   );
 }
@@ -199,56 +218,78 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     paddingHorizontal: spacing.xs,
   },
-  caseHeader: {
+  miaCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.card,
+    padding: spacing.lg + 2,
+    ...shadow.card,
+  },
+  miaHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    marginBottom: 14,
   },
-  caseHeaderText: { flex: 1 },
-  caseNumber: {
+  miaAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: radius.xl,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...shadow.primary,
+  },
+  miaAvatarDot: {
+    position: 'absolute',
+    bottom: 2,
+    right: 2,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: colors.onlineDot,
+    borderWidth: 2,
+    borderColor: colors.surface,
+  },
+  miaHeaderText: {
+    flex: 1,
+    gap: 2,
+  },
+  miaEyebrow: {
+    fontSize: 10,
+    fontWeight: fontWeight.black,
+    color: colors.primary,
+    letterSpacing: 1.1,
+  },
+  miaTitle: {
     fontSize: 15,
     fontWeight: fontWeight.black,
     color: colors.text,
   },
-  casePatient: {
-    fontSize: 13,
+  miaSubtitle: {
+    fontSize: 12,
     color: colors.textMuted,
-    marginTop: 2,
+    lineHeight: 17,
   },
-  infoRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginBottom: 14,
+  faqList: {
+    marginTop: spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
   },
-  infoBox: {
-    flex: 1,
-    backgroundColor: colors.surfaceAlt,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-  },
-  infoLabel: {
-    fontSize: 10,
-    fontWeight: fontWeight.bold,
-    color: colors.textSubtle,
-    letterSpacing: 0.7,
-    marginBottom: 6,
-  },
-  infoValueRow: {
+  faqRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: spacing.md,
+    paddingVertical: spacing.md,
   },
-  infoValue: {
+  faqRowDivider: {
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  faqQuestion: {
+    flex: 1,
     fontSize: 13,
     fontWeight: fontWeight.semibold,
     color: colors.text,
-  },
-  caseDescription: {
-    fontSize: 13,
-    color: colors.textMuted,
-    lineHeight: 19,
-    marginBottom: spacing.lg,
+    lineHeight: 18,
   },
   quickRow: {
     flexDirection: 'row',

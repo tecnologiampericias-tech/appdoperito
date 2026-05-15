@@ -1,6 +1,30 @@
 import type { FaqItem } from '@/types/domain';
 
+// Perguntas exibidas como atalho na home (após onboarding aprovado).
+// Devem casar exatamente com uma entrada de FAQ pra que a Mia já
+// retorne a resposta preset ao invés do fallback genérico.
+export const HOME_QUICK_FAQ: string[] = [
+  'Como aceito uma nomeação?',
+  'Como emito um novo laudo?',
+  'Quando recebo os honorários?',
+];
+
 export const FAQ: FaqItem[] = [
+  {
+    question: 'Como aceito uma nomeação?',
+    answer:
+      'Abra a aba Nomeações, toque na perícia que deseja avaliar e use o botão "Aceitar nomeação". Você tem até 24h após a notificação do tribunal para responder. Assim que aceita, o caso é automaticamente bloqueado na sua agenda e o tribunal é notificado.',
+  },
+  {
+    question: 'Como emito um novo laudo?',
+    answer:
+      'Toque em "Novo Laudo" em Ações Rápidas (ou abra um caso e use "Iniciar laudo"). Preencha as seções obrigatórias — você pode pedir uma sugestão para mim a qualquer momento dentro do editor. Antes de finalizar, anexe os exames complementares e revise os campos de identificação.',
+  },
+  {
+    question: 'Quando recebo os honorários?',
+    answer:
+      'O prazo varia por tribunal: TJ comuns costumam pagar em 30 a 60 dias após a homologação do laudo, e a Justiça Federal em até 90 dias. Você acompanha o status de cada honorário na própria perícia, em "Acompanhar pagamento". Se algum estiver atrasado, posso te ajudar a abrir uma petição.',
+  },
   {
     question: 'Quais documentos preciso enviar?',
     answer:
