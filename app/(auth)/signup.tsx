@@ -39,12 +39,10 @@ export default function SignupScreen() {
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const handleSignup = async () => {
     if (submitting) return;
     setErrorMessage(null);
-    setSuccessMessage(null);
 
     const trimmedName = name.trim();
     const trimmedEmail = email.trim();
@@ -70,15 +68,16 @@ export default function SignupScreen() {
       email: trimmedEmail,
       password,
     });
-    setSubmitting(false);
 
     if (error) {
+      setSubmitting(false);
       setErrorMessage(getAuthErrorMessage(error));
       return;
     }
-    setSuccessMessage(
-      'Conta criada! Enviamos um link de confirmação para seu e-mail. Confirme para acessar.',
-    );
+    // Sucesso: a sessão é criada imediatamente (sem confirmação de email).
+    // O AuthProvider detecta a nova sessão e o (auth)/_layout redireciona
+    // para /(onboarding)/documents. Mantemos submitting=true até lá para
+    // o botão continuar em loading e evitar duplo clique.
   };
 
   const handleGoToLogin = () => router.replace('/login');
@@ -147,13 +146,10 @@ export default function SignupScreen() {
             {errorMessage ? (
               <Text style={styles.errorText}>{errorMessage}</Text>
             ) : null}
-            {successMessage ? (
-              <Text style={styles.successText}>{successMessage}</Text>
-            ) : null}
 
             <Button
-              label={successMessage ? 'Ir para o login' : 'Continuar'}
-              onPress={successMessage ? handleGoToLogin : handleSignup}
+              label="Continuar"
+              onPress={handleSignup}
               loading={submitting}
               textStyle={styles.primaryButtonText}
               style={styles.primaryButton}
@@ -233,12 +229,6 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: colors.danger,
-    fontSize: 13,
-    marginBottom: spacing.md,
-    textAlign: 'center',
-  },
-  successText: {
-    color: colors.primary,
     fontSize: 13,
     marginBottom: spacing.md,
     textAlign: 'center',

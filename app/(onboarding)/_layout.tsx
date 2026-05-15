@@ -3,7 +3,7 @@ import { Redirect, Stack } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { colors } from '@/constants/theme';
 
-export default function AppLayout() {
+export default function OnboardingLayout() {
   const { session, loading, onboardingStatus } = useAuth();
 
   if (loading) {
@@ -25,17 +25,9 @@ export default function AppLayout() {
     return <Redirect href="/login" />;
   }
 
-  if (onboardingStatus === 'documents_incomplete') {
-    return <Redirect href="/(onboarding)/documents" />;
+  if (onboardingStatus !== 'documents_incomplete') {
+    return <Redirect href="/(app)/(tabs)" />;
   }
 
-  return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="dossie" />
-      <Stack.Screen name="chat-ia" />
-      <Stack.Screen name="laudo/[id]" />
-      <Stack.Screen name="pericia/[id]" options={{ presentation: 'modal' }} />
-    </Stack>
-  );
+  return <Stack screenOptions={{ headerShown: false }} />;
 }

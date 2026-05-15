@@ -42,13 +42,15 @@ export default function LoginScreen() {
 
     setSubmitting(true);
     const { error } = await signIn({ email: trimmedEmail, password });
-    setSubmitting(false);
 
     if (error) {
+      setSubmitting(false);
       setErrorMessage(getAuthErrorMessage(error));
       return;
     }
-    router.replace('/(tabs)');
+    // Sucesso: o AuthProvider detecta a nova sessão e o (auth)/_layout
+    // redireciona automaticamente para /(onboarding)/documents ou /(tabs)
+    // conforme o status de onboarding do perfil.
   };
 
   const handleSignUp = () => router.push('/signup');

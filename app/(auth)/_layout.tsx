@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { colors } from '@/constants/theme';
 
 export default function AuthLayout() {
-  const { session, loading } = useAuth();
+  const { session, loading, onboardingStatus } = useAuth();
 
   if (loading) {
     return (
@@ -22,7 +22,10 @@ export default function AuthLayout() {
   }
 
   if (session) {
-    return <Redirect href="/" />;
+    if (onboardingStatus === 'documents_incomplete') {
+      return <Redirect href="/(onboarding)/documents" />;
+    }
+    return <Redirect href="/(app)/(tabs)" />;
   }
 
   return <Stack screenOptions={{ headerShown: false }} />;
