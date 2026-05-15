@@ -13,3 +13,4 @@ export { FilterChip } from './Chip';
 export { Divider } from './Divider';
 export { ModalSheet } from './ModalSheet';
 export { IconBadge } from './IconBadge';
+export { Toast } from './Toast';

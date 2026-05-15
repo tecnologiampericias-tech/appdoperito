@@ -13,7 +13,7 @@ export function getAuthErrorMessage(error: AuthError | PostgrestError | null): s
     return 'Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada.';
   }
   if (code === 'user_already_exists' || /already registered|already exists/i.test(message)) {
-    return 'Já existe uma conta com este e-mail.';
+    return 'Já existe uma conta com este e-mail. Tente fazer login.';
   }
   if (code === 'weak_password' || /password should be at least/i.test(message)) {
     return 'Senha muito fraca. Use ao menos 6 caracteres.';
@@ -22,10 +22,17 @@ export function getAuthErrorMessage(error: AuthError | PostgrestError | null): s
     return 'Muitas tentativas em pouco tempo. Aguarde alguns minutos.';
   }
   if (code === '23505' || /duplicate key|profiles_cpf_unique/i.test(message)) {
-    return 'Este CPF já está cadastrado.';
+    return 'Este CPF já está cadastrado em outra conta.';
   }
   if (code === '23514' || /profiles_cpf_format/i.test(message)) {
-    return 'CPF inválido.';
+    return 'CPF inválido. Verifique os dígitos informados.';
+  }
+  // "Database error saving new user" é a mensagem genérica do Supabase Auth
+  // quando o trigger handle_new_user falha. A causa mais comum é CPF ou
+  // e-mail duplicado — o Postgres rejeita na constraint mas o GoTrue não
+  // expõe o erro interno.
+  if (/database error saving new user/i.test(message)) {
+    return 'Os dados informados já estão em uso por outra conta. Verifique o CPF e o e-mail.';
   }
   if (/network|fetch failed/i.test(message)) {
     return 'Sem conexão. Verifique sua internet e tente novamente.';

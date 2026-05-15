@@ -19,6 +19,7 @@ import {
   Input,
   PasswordInput,
   Screen,
+  Toast,
 } from '@/components/ui';
 import { useAuth } from '@/contexts/AuthContext';
 import { getAuthErrorMessage } from '@/lib/authErrors';
@@ -28,15 +29,15 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const handleLogin = async () => {
     if (submitting) return;
-    setErrorMessage(null);
+    setToastMessage(null);
 
     const trimmedEmail = email.trim();
     if (!trimmedEmail || !password) {
-      setErrorMessage('Preencha e-mail e senha.');
+      setToastMessage('Preencha e-mail e senha.');
       return;
     }
 
@@ -45,7 +46,7 @@ export default function LoginScreen() {
 
     if (error) {
       setSubmitting(false);
-      setErrorMessage(getAuthErrorMessage(error));
+      setToastMessage(getAuthErrorMessage(error));
       return;
     }
     // Sucesso: o AuthProvider detecta a nova sessão e o (auth)/_layout
@@ -60,6 +61,12 @@ export default function LoginScreen() {
 
   return (
     <Screen background={colors.primary} statusBar="light">
+      <Toast
+        message={toastMessage}
+        variant="error"
+        onDismiss={() => setToastMessage(null)}
+      />
+
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.flex}
@@ -100,10 +107,6 @@ export default function LoginScreen() {
                 </TouchableOpacity>
               }
             />
-
-            {errorMessage ? (
-              <Text style={styles.errorText}>{errorMessage}</Text>
-            ) : null}
 
             <Button
               label="Entrar"
@@ -189,11 +192,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: fontWeight.bold,
     color: colors.primary,
-  },
-  errorText: {
-    color: colors.danger,
-    fontSize: 13,
-    marginBottom: spacing.md,
-    textAlign: 'center',
   },
 });

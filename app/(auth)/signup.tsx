@@ -19,6 +19,7 @@ import {
   Input,
   PasswordInput,
   Screen,
+  Toast,
 } from '@/components/ui';
 import { useAuth } from '@/contexts/AuthContext';
 import { getAuthErrorMessage } from '@/lib/authErrors';
@@ -38,26 +39,26 @@ export default function SignupScreen() {
   const [cpf, setCpf] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const handleSignup = async () => {
     if (submitting) return;
-    setErrorMessage(null);
+    setToastMessage(null);
 
     const trimmedName = name.trim();
     const trimmedEmail = email.trim();
     const cpfDigits = cpf.replace(/\D/g, '');
 
     if (!trimmedName || !trimmedEmail || !cpfDigits || !password) {
-      setErrorMessage('Preencha todos os campos.');
+      setToastMessage('Preencha todos os campos.');
       return;
     }
     if (cpfDigits.length !== 11) {
-      setErrorMessage('CPF inválido. Digite os 11 dígitos.');
+      setToastMessage('CPF inválido. Digite os 11 dígitos.');
       return;
     }
     if (password.length < 6) {
-      setErrorMessage('A senha deve ter ao menos 6 caracteres.');
+      setToastMessage('A senha deve ter ao menos 6 caracteres.');
       return;
     }
 
@@ -71,7 +72,7 @@ export default function SignupScreen() {
 
     if (error) {
       setSubmitting(false);
-      setErrorMessage(getAuthErrorMessage(error));
+      setToastMessage(getAuthErrorMessage(error));
       return;
     }
     // Sucesso: a sessão é criada imediatamente (sem confirmação de email).
@@ -86,6 +87,12 @@ export default function SignupScreen() {
 
   return (
     <Screen background={colors.primary} statusBar="light">
+      <Toast
+        message={toastMessage}
+        variant="error"
+        onDismiss={() => setToastMessage(null)}
+      />
+
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.flex}
@@ -142,10 +149,6 @@ export default function SignupScreen() {
               onChangeText={setPassword}
               containerStyle={styles.field}
             />
-
-            {errorMessage ? (
-              <Text style={styles.errorText}>{errorMessage}</Text>
-            ) : null}
 
             <Button
               label="Continuar"
@@ -226,11 +229,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: fontWeight.bold,
     color: colors.primary,
-  },
-  errorText: {
-    color: colors.danger,
-    fontSize: 13,
-    marginBottom: spacing.md,
-    textAlign: 'center',
   },
 });
