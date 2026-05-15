@@ -69,7 +69,7 @@ const STORAGE_KEY = '@mpericias:onboarding_seen';
 
 export default function WelcomeScreen() {
   const [currentStep, setCurrentStep] = useState(0);
-  const [prevStep, setPrevStep] = useState(0);
+  const prevStepRef = useRef(0);
 
   // Animations
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -81,7 +81,7 @@ export default function WelcomeScreen() {
 
   const isLastStep = currentStep === STEPS.length - 1;
   const step = STEPS[currentStep];
-  const prevStepData = STEPS[prevStep];
+  const prevStepData = STEPS[prevStepRef.current];
 
   // Entrance animation for content
   useEffect(() => {
@@ -89,14 +89,14 @@ export default function WelcomeScreen() {
     slideAnim.setValue(30);
     iconScale.setValue(0.3);
 
-    if (currentStep !== prevStep) {
+    if (currentStep !== prevStepRef.current) {
       bgFade.setValue(0);
       Animated.timing(bgFade, {
         toValue: 1,
         duration: 450,
         useNativeDriver: false,
       }).start(() => {
-        setPrevStep(currentStep);
+        prevStepRef.current = currentStep;
       });
     }
 
@@ -119,7 +119,7 @@ export default function WelcomeScreen() {
         useNativeDriver: true,
       }),
     ]).start();
-  }, [currentStep, fadeAnim, slideAnim, iconScale, prevStep, bgFade]);
+  }, [currentStep, fadeAnim, slideAnim, iconScale, bgFade]);
 
   // Subtle pulsing animation for the background ring
   useEffect(() => {

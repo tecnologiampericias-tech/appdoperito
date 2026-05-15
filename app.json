@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "mpericias-app",
-    "slug": "mpericias-app",
+    "name": "App do Perito",
+    "slug": "appdoperito",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "mpericiasapp",
+    "scheme": "appdoperito",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -23,7 +23,14 @@
     },
     "web": {
       "output": "single",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/favicon.png",
+      "display": "standalone",
+      "scope": "/",
+      "startUrl": "/",
+      "themeColor": "#2A9D8F",
+      "backgroundColor": "#0A1118",
+      "shortName": "MPericias",
+      "name": "MPericias"
     },
     "plugins": [
       "expo-router",
