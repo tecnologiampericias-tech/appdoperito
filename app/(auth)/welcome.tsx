@@ -12,18 +12,16 @@ import { router } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StatusBar } from 'expo-status-bar';
-import { colors, fontWeight, layout, radius, spacing } from '@/constants/theme';
+import { BrandMark } from '@/components/ui';
+import { colors, fontWeight, layout, radius, shadow, spacing } from '@/constants/theme';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 // ---------------------------------------------------------------------------
-// Onboarding steps – inspired by https://mpericias.com.br value propositions
+// Onboarding steps — baseado em https://mpericias.com.br
 // ---------------------------------------------------------------------------
 type Step = {
-  icon: React.ReactNode;
-  accentColor: string;
-  bgGradientTop: string;
-  bgGradientBottom: string;
+  icon: keyof typeof MaterialCommunityIcons.glyphMap;
   tag: string;
   title: string;
   description: string;
@@ -31,54 +29,39 @@ type Step = {
 
 const STEPS: Step[] = [
   {
-    icon: <MaterialCommunityIcons name="shield-check-outline" size={44} color="#fff" />,
-    accentColor: '#4AAFA6',
-    bgGradientTop: '#4AAFA6',
-    bgGradientBottom: '#2A8A7D',
+    icon: 'shield-check-outline',
     tag: 'ASSESSORIA COMPLETA',
     title: 'A maior assessoria\npericial do Brasil',
     description:
-      'Conectamos peritos judiciais e contratantes em todo o território nacional. Mais oportunidades, mais segurança.',
+      'Conectamos peritos judiciais e contratantes em todo o território nacional, com suporte desde o cadastro até a entrega do laudo.',
   },
   {
-    icon: <MaterialCommunityIcons name="file-document-check-outline" size={44} color="#fff" />,
-    accentColor: '#5B8DEF',
-    bgGradientTop: '#5B8DEF',
-    bgGradientBottom: '#3A6DD0',
+    icon: 'file-document-check-outline',
     tag: 'SEM BUROCRACIA',
     title: 'Nós cuidamos dos\nprazos e documentos',
     description:
-      'Gestão completa de prazos processuais, formatação e protocolo de laudos. Você foca na perícia, nós resolvemos o resto.',
+      'Gestão completa de prazos processuais, formatação e protocolo de documentos e laudos. Você foca na perícia, nós resolvemos o resto.',
   },
   {
-    icon: <Ionicons name="cash-outline" size={44} color="#fff" />,
-    accentColor: '#E6A23C',
-    bgGradientTop: '#E6A23C',
-    bgGradientBottom: '#C4862A',
+    icon: 'cash-multiple',
     tag: 'RENDA EXTRA',
     title: 'Ganhe com perícias\nem todo o Brasil',
     description:
-      'Receba nomeações de tribunais de qualquer estado. Orientamos sobre honorários e acompanhamos o pagamento.',
+      'Receba nomeações de tribunais de qualquer estado. Orientamos sobre honorários e acompanhamos o pagamento junto ao tribunal.',
   },
   {
-    icon: <MaterialCommunityIcons name="account-group-outline" size={44} color="#fff" />,
-    accentColor: '#9B6FE8',
-    bgGradientTop: '#9B6FE8',
-    bgGradientBottom: '#7B4FC8',
+    icon: 'account-group-outline',
     tag: 'INTERMEDIAÇÃO',
     title: 'Comunicação com\ntribunais e advogados',
     description:
-      'Fazemos o contato direto com as partes envolvidas, facilitando toda a comunicação do processo pericial.',
+      'Fazemos o contato direto com tribunais e advogados, facilitando toda a comunicação e simplificando o processo pericial.',
   },
   {
-    icon: <MaterialCommunityIcons name="calendar-check-outline" size={44} color="#fff" />,
-    accentColor: '#4AAFA6',
-    bgGradientTop: '#1A3A36',
-    bgGradientBottom: '#0D1F1D',
-    tag: 'COMECE AGORA',
-    title: 'Cadastre-se e\ncomece a atuar',
+    icon: 'rocket-launch-outline',
+    tag: 'VAMOS COMEÇAR',
+    title: 'Crie sua conta\ne faça parte',
     description:
-      'Registro simples e rápido. Em poucos passos você estará pronto para receber nomeações e realizar perícias.',
+      'Cadastre-se, envie seus documentos e nossa equipe cuidará de todo o processo de habilitação nos tribunais para você.',
   },
 ];
 
@@ -86,52 +69,37 @@ const STORAGE_KEY = '@mpericias:onboarding_seen';
 
 export default function WelcomeScreen() {
   const [currentStep, setCurrentStep] = useState(0);
-  const [prevStep, setPrevStep] = useState(0);
 
-  const fadeAnims = useRef(STEPS.map(() => new Animated.Value(0))).current;
-  const slideAnims = useRef(STEPS.map(() => new Animated.Value(40))).current;
-  const iconScale = useRef(STEPS.map(() => new Animated.Value(0.5))).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
+  const iconScale = useRef(new Animated.Value(0.5)).current;
   const buttonScale = useRef(new Animated.Value(1)).current;
-  const bgFade = useRef(new Animated.Value(1)).current;
 
   const isLastStep = currentStep === STEPS.length - 1;
+  const step = STEPS[currentStep];
 
   // Animate in current step
   useEffect(() => {
-    // Reset content animations
-    fadeAnims[currentStep].setValue(0);
-    slideAnims[currentStep].setValue(30);
-    iconScale[currentStep].setValue(0.5);
+    fadeAnim.setValue(0);
+    slideAnim.setValue(24);
+    iconScale.setValue(0.6);
 
-    // Background crossfade
-    if (currentStep !== prevStep) {
-      bgFade.setValue(0);
-      Animated.timing(bgFade, {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
         toValue: 1,
         duration: 400,
-        useNativeDriver: false, // backgroundColor cannot use native driver
-      }).start(() => {
-        setPrevStep(currentStep);
-      });
-    }
-
-    // Content entrance
-    Animated.parallel([
-      Animated.timing(fadeAnims[currentStep], {
-        toValue: 1,
-        duration: 500,
         useNativeDriver: true,
       }),
-      Animated.spring(slideAnims[currentStep], {
+      Animated.spring(slideAnim, {
         toValue: 0,
-        damping: 20,
-        stiffness: 150,
+        damping: 22,
+        stiffness: 160,
         useNativeDriver: true,
       }),
-      Animated.spring(iconScale[currentStep], {
+      Animated.spring(iconScale, {
         toValue: 1,
-        damping: 12,
-        stiffness: 180,
+        damping: 14,
+        stiffness: 200,
         useNativeDriver: true,
       }),
     ]).start();
@@ -146,8 +114,8 @@ export default function WelcomeScreen() {
   const handleNext = useCallback(() => {
     Animated.sequence([
       Animated.timing(buttonScale, {
-        toValue: 0.93,
-        duration: 80,
+        toValue: 0.94,
+        duration: 70,
         useNativeDriver: true,
       }),
       Animated.spring(buttonScale, {
@@ -171,297 +139,279 @@ export default function WelcomeScreen() {
     router.replace('/login');
   }, [markSeen]);
 
-  const step = STEPS[currentStep];
-  const prevStepData = STEPS[prevStep];
-
-  // Interpolate bg color for smooth transition
-  const bgColor = bgFade.interpolate({
-    inputRange: [0, 1],
-    outputRange: [prevStepData.bgGradientTop, step.bgGradientTop],
-  });
-
   return (
-    <Animated.View style={[styles.container, { backgroundColor: bgColor }]}>
+    <View style={styles.screen}>
       <StatusBar style="light" />
 
-      {/* Background decoration circles */}
-      <View style={[styles.decorCircle1, { backgroundColor: step.bgGradientBottom }]} />
-      <View style={[styles.decorCircle2, { backgroundColor: step.bgGradientBottom, opacity: 0.3 }]} />
-
-      {/* Top bar: brand + skip/step */}
-      <View style={styles.topBar}>
-        <View style={styles.topBrand}>
-          <View style={styles.topBrandIcon}>
-            <Ionicons name="medical" size={14} color={step.bgGradientTop} />
-          </View>
-          <Text style={styles.topBrandLabel}>MPericias</Text>
-        </View>
-
-        {!isLastStep ? (
+      {/* ── Header teal (igual ao login/signup) ── */}
+      <View style={styles.header}>
+        <View style={styles.headerTop}>
+          <BrandMark variant="onPrimary" label="MPericias" />
           <TouchableOpacity
-            style={styles.skipButton}
+            style={styles.skipPill}
             onPress={handleSkip}
             activeOpacity={0.7}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           >
-            <Text style={styles.skipText}>Pular</Text>
-          </TouchableOpacity>
-        ) : (
-          <View style={styles.stepCounter}>
-            <Text style={styles.stepCounterText}>
-              {currentStep + 1} de {STEPS.length}
+            <Text style={styles.skipPillText}>
+              {isLastStep ? 'Entrar' : 'Pular'}
             </Text>
-          </View>
-        )}
+          </TouchableOpacity>
+        </View>
+
+        <Text style={styles.stepLabel}>
+          {currentStep + 1} de {STEPS.length}
+        </Text>
+
+        {/* Progress bar */}
+        <View style={styles.progressTrack}>
+          <Animated.View
+            style={[
+              styles.progressFill,
+              { width: `${((currentStep + 1) / STEPS.length) * 100}%` },
+            ]}
+          />
+        </View>
       </View>
 
-      {/* Content */}
-      <View style={styles.content}>
-        {/* Icon circle */}
-        <Animated.View
-          style={[
-            styles.iconCircle,
-            {
-              backgroundColor: 'rgba(255,255,255,0.15)',
-              transform: [{ scale: iconScale[currentStep] }],
-              opacity: fadeAnims[currentStep],
-            },
-          ]}
-        >
-          <View style={styles.iconInner}>
-            {step.icon}
-          </View>
-        </Animated.View>
+      {/* ── Card body (fundo claro como login/signup) ── */}
+      <View style={styles.body}>
+        <View style={styles.card}>
+          {/* Icon */}
+          <Animated.View
+            style={[
+              styles.iconCircle,
+              {
+                transform: [{ scale: iconScale }],
+                opacity: fadeAnim,
+              },
+            ]}
+          >
+            <MaterialCommunityIcons
+              name={step.icon}
+              size={36}
+              color={colors.primary}
+            />
+          </Animated.View>
 
-        {/* Tag */}
-        <Animated.View
-          style={[
-            styles.tagWrap,
-            {
-              opacity: fadeAnims[currentStep],
-              transform: [{ translateY: slideAnims[currentStep] }],
-            },
-          ]}
-        >
-          <Text style={styles.tag}>{step.tag}</Text>
-        </Animated.View>
+          {/* Tag */}
+          <Animated.View
+            style={[
+              styles.tagWrap,
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }],
+              },
+            ]}
+          >
+            <Text style={styles.tag}>{step.tag}</Text>
+          </Animated.View>
 
-        {/* Title */}
-        <Animated.Text
-          style={[
-            styles.title,
-            {
-              opacity: fadeAnims[currentStep],
-              transform: [{ translateY: slideAnims[currentStep] }],
-            },
-          ]}
-        >
-          {step.title}
-        </Animated.Text>
+          {/* Title */}
+          <Animated.Text
+            style={[
+              styles.title,
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }],
+              },
+            ]}
+          >
+            {step.title}
+          </Animated.Text>
 
-        {/* Description */}
-        <Animated.Text
-          style={[
-            styles.description,
-            {
-              opacity: fadeAnims[currentStep],
-              transform: [{ translateY: slideAnims[currentStep] }],
-            },
-          ]}
-        >
-          {step.description}
-        </Animated.Text>
-      </View>
+          {/* Description */}
+          <Animated.Text
+            style={[
+              styles.description,
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }],
+              },
+            ]}
+          >
+            {step.description}
+          </Animated.Text>
 
-      {/* Bottom section */}
-      <View style={styles.bottomSection}>
-        {/* Progress dots */}
-        <View style={styles.dotsRow}>
-          {STEPS.map((_, i) => {
-            const isActive = i === currentStep;
-            return (
+          {/* Dots */}
+          <View style={styles.dotsRow}>
+            {STEPS.map((_, i) => (
               <TouchableOpacity
                 key={i}
                 onPress={() => setCurrentStep(i)}
                 activeOpacity={0.7}
+                hitSlop={{ top: 6, bottom: 6, left: 4, right: 4 }}
               >
-                <Animated.View
+                <View
                   style={[
                     styles.dot,
-                    isActive && styles.dotActive,
+                    i === currentStep && styles.dotActive,
+                    i < currentStep && styles.dotDone,
                   ]}
                 />
               </TouchableOpacity>
-            );
-          })}
+            ))}
+          </View>
         </View>
 
-        {/* Primary action button */}
+        {/* CTA Button */}
         <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
           <TouchableOpacity
             style={[
-              styles.primaryButton,
-              isLastStep && styles.primaryButtonFinal,
+              styles.ctaButton,
+              isLastStep && styles.ctaButtonFinal,
             ]}
             onPress={handleNext}
             activeOpacity={0.85}
           >
-            {isLastStep ? (
-              <View style={styles.finalButtonContent}>
-                <Text style={[styles.primaryButtonText, styles.finalButtonText]}>Criar minha conta</Text>
-                <Ionicons name="arrow-forward" size={20} color={colors.primaryDarker} />
-              </View>
-            ) : (
-              <View style={styles.nextButtonContent}>
-                <Text style={styles.primaryButtonText}>Continuar</Text>
-                <Ionicons name="arrow-forward" size={18} color={colors.white} />
-              </View>
-            )}
+            <Text
+              style={[
+                styles.ctaText,
+                isLastStep && styles.ctaTextFinal,
+              ]}
+            >
+              {isLastStep ? 'Criar minha conta' : 'Continuar'}
+            </Text>
+            <Ionicons
+              name="arrow-forward"
+              size={18}
+              color={isLastStep ? colors.white : colors.white}
+            />
           </TouchableOpacity>
         </Animated.View>
 
         {/* Secondary link */}
-        <TouchableOpacity onPress={handleSkip} activeOpacity={0.7} style={styles.secondaryLink}>
-          <Text style={styles.secondaryLinkText}>
-            {isLastStep ? 'Já tenho uma conta' : 'Já tenho uma conta'}
-          </Text>
+        <TouchableOpacity
+          onPress={handleSkip}
+          activeOpacity={0.7}
+          style={styles.secondaryLink}
+        >
+          <Text style={styles.secondaryLinkText}>Já tenho uma conta</Text>
         </TouchableOpacity>
       </View>
-    </Animated.View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  screen: {
     flex: 1,
+    backgroundColor: colors.bgGreyMint,
   },
-  decorCircle1: {
-    position: 'absolute',
-    top: -SCREEN_WIDTH * 0.5,
-    right: -SCREEN_WIDTH * 0.3,
-    width: SCREEN_WIDTH * 1.2,
-    height: SCREEN_WIDTH * 1.2,
-    borderRadius: SCREEN_WIDTH * 0.6,
-    opacity: 0.2,
+
+  // ── Header ──
+  header: {
+    backgroundColor: colors.primary,
+    paddingTop: layout.authHeaderTop,
+    paddingHorizontal: spacing.xxl,
+    paddingBottom: 70,
   },
-  decorCircle2: {
-    position: 'absolute',
-    bottom: -SCREEN_WIDTH * 0.3,
-    left: -SCREEN_WIDTH * 0.4,
-    width: SCREEN_WIDTH * 0.9,
-    height: SCREEN_WIDTH * 0.9,
-    borderRadius: SCREEN_WIDTH * 0.45,
-  },
-  topBar: {
-    position: 'absolute',
-    top: layout.statusBarTop,
-    left: spacing.xxl,
-    right: spacing.xxl,
-    zIndex: 10,
+  headerTop: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    marginBottom: spacing.xxl,
   },
-  topBrand: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  topBrandIcon: {
-    width: 26,
-    height: 26,
-    borderRadius: 7,
-    backgroundColor: colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  topBrandLabel: {
-    fontSize: 16,
-    fontWeight: fontWeight.bold,
-    color: colors.white,
-    letterSpacing: 0.3,
-  },
-  skipButton: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.pill,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-  },
-  skipText: {
-    fontSize: 14,
-    fontWeight: fontWeight.semibold,
-    color: 'rgba(255,255,255,0.9)',
-    letterSpacing: 0.3,
-  },
-  stepCounter: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.pill,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-  },
-  stepCounterText: {
-    fontSize: 13,
-    fontWeight: fontWeight.semibold,
-    color: 'rgba(255,255,255,0.85)',
-    letterSpacing: 0.3,
-  },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: spacing.xxl + 8,
-    paddingTop: layout.statusBarTop + 20,
-  },
-  iconCircle: {
-    width: 110,
-    height: 110,
-    borderRadius: 55,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 32,
-  },
-  iconInner: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  tagWrap: {
+  skipPill: {
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: radius.pill,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    marginBottom: 18,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+  },
+  skipPillText: {
+    fontSize: 13,
+    fontWeight: fontWeight.semibold,
+    color: colors.onPrimary90,
+    letterSpacing: 0.2,
+  },
+  stepLabel: {
+    fontSize: 13,
+    fontWeight: fontWeight.semibold,
+    color: colors.onPrimary75,
+    letterSpacing: 0.3,
+    marginBottom: spacing.sm,
+  },
+  progressTrack: {
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.white,
+  },
+
+  // ── Body ──
+  body: {
+    flex: 1,
+    paddingHorizontal: spacing.xxl,
+    alignItems: 'center',
+  },
+  card: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.hero,
+    paddingHorizontal: spacing.xxl,
+    paddingTop: spacing.huge + 8,
+    paddingBottom: spacing.xxl,
+    marginTop: -40,
+    width: '100%',
+    alignItems: 'center',
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 24,
+    elevation: 8,
+  },
+
+  // ── Icon ──
+  iconCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: colors.primaryTint,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.xxl,
+    borderWidth: 1,
+    borderColor: colors.primaryBorder,
+  },
+
+  // ── Tag ──
+  tagWrap: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: radius.pill,
+    backgroundColor: colors.primarySurface,
+    marginBottom: spacing.lg,
   },
   tag: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: fontWeight.black,
-    color: 'rgba(255,255,255,0.9)',
-    letterSpacing: 1.5,
+    color: colors.primary,
+    letterSpacing: 1.4,
   },
+
+  // ── Text ──
   title: {
-    fontSize: 32,
+    fontSize: 26,
     fontWeight: fontWeight.black,
-    color: colors.white,
+    color: colors.text,
     textAlign: 'center',
-    lineHeight: 40,
-    marginBottom: 16,
+    lineHeight: 34,
+    marginBottom: spacing.md,
   },
   description: {
-    fontSize: 16,
-    color: 'rgba(255,255,255,0.8)',
+    fontSize: 14,
+    color: colors.textMuted,
     textAlign: 'center',
-    lineHeight: 24,
-    paddingHorizontal: 8,
+    lineHeight: 22,
+    paddingHorizontal: spacing.sm,
+    marginBottom: spacing.xxl,
   },
-  bottomSection: {
-    paddingHorizontal: spacing.xxl + 8,
-    paddingBottom: Platform.OS === 'ios' ? 50 : 36,
-    alignItems: 'center',
-    gap: 18,
-  },
+
+  // ── Dots ──
   dotsRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -471,51 +421,51 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: 'rgba(255,255,255,0.3)',
+    backgroundColor: colors.borderSubtle,
   },
   dotActive: {
-    width: 28,
-    backgroundColor: colors.white,
+    width: 24,
+    backgroundColor: colors.primary,
   },
-  primaryButton: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    borderRadius: radius.pill + 6,
-    paddingVertical: 18,
-    paddingHorizontal: 40,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.3)',
-    minWidth: SCREEN_WIDTH - 80,
+  dotDone: {
+    backgroundColor: colors.primaryDisabled,
+  },
+
+  // ── CTA ──
+  ctaButton: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: colors.primary,
+    borderRadius: radius.pill + 4,
+    paddingVertical: 16,
+    minWidth: SCREEN_WIDTH - 64,
+    marginTop: spacing.xxl,
+    ...shadow.primary,
   },
-  primaryButtonFinal: {
-    backgroundColor: colors.white,
-    borderColor: colors.white,
+  ctaButtonFinal: {
+    backgroundColor: colors.primaryDarker,
+    ...shadow.primaryDark,
   },
-  primaryButtonText: {
-    fontSize: 17,
+  ctaText: {
+    fontSize: 16,
     fontWeight: fontWeight.bold,
     color: colors.white,
     letterSpacing: 0.3,
   },
-  nextButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  ctaTextFinal: {
+    fontSize: 17,
   },
-  finalButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  finalButtonText: {
-    color: colors.primaryDarker,
-  },
+
+  // ── Secondary ──
   secondaryLink: {
+    marginTop: spacing.lg,
     paddingVertical: spacing.xs,
   },
   secondaryLinkText: {
     fontSize: 14,
     fontWeight: fontWeight.medium,
-    color: 'rgba(255,255,255,0.7)',
+    color: colors.textMuted,
   },
 });
