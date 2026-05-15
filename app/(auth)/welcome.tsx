@@ -3,7 +3,6 @@ import {
   Animated,
   Dimensions,
   Platform,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -12,54 +11,57 @@ import {
 import { router } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { colors, fontWeight, radius, shadow, spacing } from '@/constants/theme';
-import { AuthHeader, Button, Screen } from '@/components/ui';
+import { StatusBar } from 'expo-status-bar';
+import { colors, fontWeight, layout, radius, shadow, spacing } from '@/constants/theme';
+import { BrandMark } from '@/components/ui';
+
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 // ---------------------------------------------------------------------------
-// Onboarding steps — baseado em https://mpericias.com.br
+// Onboarding steps
 // ---------------------------------------------------------------------------
 type Step = {
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
-  tag: string;
   title: string;
   description: string;
+  accent: string;
 };
 
 const STEPS: Step[] = [
   {
     icon: 'shield-check-outline',
-    tag: 'ASSESSORIA COMPLETA',
     title: 'A maior assessoria\npericial do Brasil',
     description:
-      'Conectamos peritos judiciais e contratantes em todo o território nacional, com suporte desde o cadastro até a entrega do laudo.',
+      'Conectamos peritos judiciais e contratantes em todo o país com suporte completo desde o cadastro até o laudo.',
+    accent: '#2A9D8F', // Teal
   },
   {
-    icon: 'file-document-check-outline',
-    tag: 'SEM BUROCRACIA',
-    title: 'Nós cuidamos dos\nprazos e documentos',
+    icon: 'file-document-multiple-outline',
+    title: 'Esqueça a\nburocracia',
     description:
-      'Gestão completa de prazos processuais, formatação e protocolo de documentos. Você foca na perícia, nós resolvemos o resto.',
+      'Cuidamos de prazos processuais, formatação e protocolo de documentos. Você foca apenas na perícia.',
+    accent: '#457B9D', // Blue
   },
   {
-    icon: 'cash-multiple',
-    tag: 'RENDA EXTRA',
-    title: 'Ganhe com perícias\nem todo o Brasil',
+    icon: 'bank-outline',
+    title: 'Mais oportunidades\ne renda',
     description:
-      'Receba nomeações de tribunais de qualquer estado. Orientamos sobre honorários e acompanhamos o pagamento junto ao tribunal.',
+      'Receba nomeações de diversos tribunais. Orientamos honorários e acompanhamos seus pagamentos.',
+    accent: '#E9C46A', // Gold
   },
   {
-    icon: 'account-group-outline',
-    tag: 'INTERMEDIAÇÃO',
-    title: 'Comunicação com\ntribunais e advogados',
+    icon: 'handshake-outline',
+    title: 'Comunicação\nsimplificada',
     description:
-      'Fazemos o contato direto com tribunais e advogados, facilitando toda a comunicação e simplificando o processo pericial.',
+      'Fazemos a ponte direta com tribunais e advogados, facilitando e agilizando todo o trâmite.',
+    accent: '#8338EC', // Purple
   },
   {
     icon: 'rocket-launch-outline',
-    tag: 'VAMOS COMEÇAR',
-    title: 'Crie sua conta\ne faça parte',
+    title: 'Tudo pronto para\ncomeçar',
     description:
-      'Cadastre-se, envie seus documentos e nossa equipe cuidará de todo o processo de habilitação nos tribunais para você.',
+      'Cadastre-se, envie sua documentação e deixe nossa equipe cuidar da sua habilitação nos tribunais.',
+    accent: colors.primary, // Brand
   },
 ];
 
@@ -68,38 +70,62 @@ const STORAGE_KEY = '@mpericias:onboarding_seen';
 export default function WelcomeScreen() {
   const [currentStep, setCurrentStep] = useState(0);
 
+  // Animations
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(20)).current;
+  const slideAnim = useRef(new Animated.Value(40)).current;
   const iconScale = useRef(new Animated.Value(0.5)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const buttonScale = useRef(new Animated.Value(1)).current;
 
   const isLastStep = currentStep === STEPS.length - 1;
   const step = STEPS[currentStep];
 
+  // Entrance animation for content
   useEffect(() => {
     fadeAnim.setValue(0);
-    slideAnim.setValue(20);
-    iconScale.setValue(0.6);
+    slideAnim.setValue(30);
+    iconScale.setValue(0.3);
 
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 400,
+        duration: 450,
         useNativeDriver: true,
       }),
       Animated.spring(slideAnim, {
         toValue: 0,
-        damping: 22,
-        stiffness: 160,
+        damping: 20,
+        stiffness: 100,
         useNativeDriver: true,
       }),
       Animated.spring(iconScale, {
         toValue: 1,
-        damping: 14,
-        stiffness: 200,
+        damping: 12,
+        stiffness: 120,
         useNativeDriver: true,
       }),
     ]).start();
   }, [currentStep, fadeAnim, slideAnim, iconScale]);
+
+  // Subtle pulsing animation for the background ring
+  useEffect(() => {
+    const pulse = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.15,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    pulse.start();
+    return () => pulse.stop();
+  }, [pulseAnim]);
 
   const markSeen = useCallback(async () => {
     try {
@@ -108,13 +134,27 @@ export default function WelcomeScreen() {
   }, []);
 
   const handleNext = useCallback(() => {
+    Animated.sequence([
+      Animated.timing(buttonScale, {
+        toValue: 0.95,
+        duration: 80,
+        useNativeDriver: true,
+      }),
+      Animated.spring(buttonScale, {
+        toValue: 1,
+        damping: 15,
+        stiffness: 300,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
     if (isLastStep) {
       markSeen();
       router.replace('/signup');
     } else {
       setCurrentStep((s) => s + 1);
     }
-  }, [isLastStep, markSeen]);
+  }, [isLastStep, markSeen, buttonScale]);
 
   const handleSkip = useCallback(() => {
     markSeen();
@@ -122,264 +162,283 @@ export default function WelcomeScreen() {
   }, [markSeen]);
 
   return (
-    <Screen background={colors.primary} statusBar="light">
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        bounces={false}
-      >
-        <AuthHeader
-          title="Bem-vindo"
-          subtitle={'Conheça os benefícios da\nplataforma MPericias.'}
-        />
+    <View style={styles.screen}>
+      <StatusBar style="light" />
 
-        {/* Action bar for skip text on top of the card overlap */}
-        <View style={styles.topBar}>
-          <Text style={styles.stepText}>
-            {currentStep + 1} de {STEPS.length}
-          </Text>
-          {!isLastStep ? (
-            <TouchableOpacity onPress={handleSkip} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+      {/* --- TOP SECTION (Visuals) --- */}
+      <View style={styles.topSection}>
+        {/* Dynamic Background */}
+        <Animated.View
+          style={[
+            styles.bgGlow,
+            { backgroundColor: step.accent, opacity: fadeAnim },
+          ]}
+        />
+        
+        {/* Header / Brand */}
+        <View style={styles.header}>
+          <BrandMark variant="onPrimary" label="MPericias" />
+          {!isLastStep && (
+            <TouchableOpacity onPress={handleSkip} style={styles.skipBtn}>
               <Text style={styles.skipText}>Pular</Text>
             </TouchableOpacity>
-          ) : (
-            <View style={{ width: 40 }} /> // spacer to balance flex-between
           )}
         </View>
 
-        <View style={styles.card}>
-          <View style={styles.cardContent}>
-            {/* Icon */}
-            <Animated.View
-              style={[
-                styles.iconCircle,
-                {
-                  transform: [{ scale: iconScale }],
-                  opacity: fadeAnim,
-                },
-              ]}
-            >
-              <MaterialCommunityIcons
-                name={step.icon}
-                size={36}
-                color={colors.primary}
+        {/* Center Artwork */}
+        <View style={styles.artworkContainer}>
+          <Animated.View
+            style={[
+              styles.artworkRingOuter,
+              { transform: [{ scale: pulseAnim }] },
+            ]}
+          />
+          <Animated.View
+            style={[
+              styles.artworkRingInner,
+              {
+                backgroundColor: step.accent,
+                opacity: fadeAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, 0.15],
+                }),
+              },
+            ]}
+          />
+          <Animated.View
+            style={[
+              styles.artworkIconWrap,
+              {
+                transform: [{ scale: iconScale }],
+                opacity: fadeAnim,
+                backgroundColor: step.accent,
+              },
+            ]}
+          >
+            <MaterialCommunityIcons
+              name={step.icon}
+              size={64}
+              color={colors.white}
+            />
+          </Animated.View>
+        </View>
+      </View>
+
+      {/* --- BOTTOM SECTION (Content Sheet) --- */}
+      <View style={styles.bottomSheet}>
+        {/* Progress Indicators */}
+        <View style={styles.indicatorRow}>
+          {STEPS.map((_, i) => {
+            const isActive = i === currentStep;
+            return (
+              <View
+                key={i}
+                style={[
+                  styles.indicator,
+                  isActive && { backgroundColor: step.accent, width: 32 },
+                ]}
               />
-            </Animated.View>
+            );
+          })}
+        </View>
 
-            {/* Tag */}
-            <Animated.View
-              style={[
-                styles.tagWrap,
-                {
-                  opacity: fadeAnim,
-                  transform: [{ translateY: slideAnim }],
-                },
-              ]}
-            >
-              <Text style={styles.tag}>{step.tag}</Text>
-            </Animated.View>
+        {/* Text Content */}
+        <View style={styles.textContent}>
+          <Animated.Text
+            style={[
+              styles.title,
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }],
+              },
+            ]}
+          >
+            {step.title}
+          </Animated.Text>
+          <Animated.Text
+            style={[
+              styles.description,
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }],
+              },
+            ]}
+          >
+            {step.description}
+          </Animated.Text>
+        </View>
 
-            {/* Title */}
-            <Animated.Text
-              style={[
-                styles.title,
-                {
-                  opacity: fadeAnim,
-                  transform: [{ translateY: slideAnim }],
-                },
-              ]}
-            >
-              {step.title}
-            </Animated.Text>
-
-            {/* Description */}
-            <Animated.Text
-              style={[
-                styles.description,
-                {
-                  opacity: fadeAnim,
-                  transform: [{ translateY: slideAnim }],
-                },
-              ]}
-            >
-              {step.description}
-            </Animated.Text>
-
-            {/* Dots */}
-            <View style={styles.dotsRow}>
-              {STEPS.map((_, i) => (
-                <TouchableOpacity
-                  key={i}
-                  onPress={() => setCurrentStep(i)}
-                  activeOpacity={0.7}
-                  hitSlop={{ top: 10, bottom: 10, left: 6, right: 6 }}
-                >
-                  <View
-                    style={[
-                      styles.dot,
-                      i === currentStep && styles.dotActive,
-                      i < currentStep && styles.dotDone,
-                    ]}
-                  />
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            {/* CTA inside card */}
-            <Button
-              label={isLastStep ? 'Criar minha conta' : 'Continuar'}
-              onPress={handleNext}
-              textStyle={[
-                styles.primaryButtonText,
-                isLastStep && { color: colors.white }
-              ]}
+        {/* Actions */}
+        <View style={styles.actionContainer}>
+          <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
+            <TouchableOpacity
               style={[
                 styles.primaryButton,
-                isLastStep && { backgroundColor: colors.primaryDarker }
+                { backgroundColor: step.accent },
               ]}
-              iconRight="arrow-forward"
-            />
-          </View>
-        </View>
+              onPress={handleNext}
+              activeOpacity={0.9}
+            >
+              <Text style={styles.primaryButtonText}>
+                {isLastStep ? 'Criar minha conta' : 'Continuar'}
+              </Text>
+              <Ionicons
+                name={isLastStep ? "checkmark" : "arrow-forward"}
+                size={22}
+                color={colors.white}
+              />
+            </TouchableOpacity>
+          </Animated.View>
 
-        {/* Footer exactly like login/signup */}
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>Já possui acesso? </Text>
-          <TouchableOpacity onPress={handleSkip}>
-            <Text style={styles.footerLink}>Fazer Login</Text>
+          {/* Footer Link */}
+          <TouchableOpacity onPress={handleSkip} style={styles.footerLink}>
+            <Text style={styles.footerText}>
+              Já tem uma conta? <Text style={[styles.footerTextBold, { color: step.accent }]}>Fazer Login</Text>
+            </Text>
           </TouchableOpacity>
         </View>
-      </ScrollView>
-    </Screen>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: spacing.xxl,
-    paddingBottom: spacing.huge,
-    backgroundColor: colors.bgGreyMint,
+  screen: {
+    flex: 1,
+    backgroundColor: '#0A1118', // Dark elegant background for the top
   },
-  topBar: {
+
+  // -- TOP SECTION --
+  topSection: {
+    height: SCREEN_HEIGHT * 0.55,
+    width: '100%',
+    paddingTop: layout.statusBarTop + spacing.md,
+  },
+  bgGlow: {
+    ...StyleSheet.absoluteFillObject,
+    opacity: 0.15,
+  },
+  header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    marginBottom: 8,
-    marginTop: -80, // pull up into the AuthHeader space
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.xxl,
     zIndex: 10,
   },
-  stepText: {
-    fontSize: 13,
-    fontWeight: fontWeight.bold,
-    color: colors.onPrimary85,
-    letterSpacing: 0.5,
+  skipBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: radius.pill,
+    backgroundColor: 'rgba(255,255,255,0.1)',
   },
   skipText: {
+    color: colors.white,
     fontSize: 14,
     fontWeight: fontWeight.bold,
-    color: colors.white,
   },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.hero,
-    paddingHorizontal: spacing.xxl,
-    paddingTop: spacing.xxl,
-    paddingBottom: spacing.xxl,
-    marginTop: 8, // offset relative to the top bar
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.08,
-    shadowRadius: 24,
-    elevation: 8,
-  },
-  cardContent: {
-    alignItems: 'center',
-  },
-  iconCircle: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: colors.primaryTint,
+  artworkContainer: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.xl,
+  },
+  artworkRingOuter: {
+    position: 'absolute',
+    width: SCREEN_WIDTH * 0.75,
+    height: SCREEN_WIDTH * 0.75,
+    borderRadius: SCREEN_WIDTH * 0.4,
     borderWidth: 1,
-    borderColor: colors.primaryBorder,
+    borderColor: 'rgba(255,255,255,0.05)',
   },
-  tagWrap: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: radius.pill,
-    backgroundColor: colors.primarySurface,
-    marginBottom: spacing.lg,
+  artworkRingInner: {
+    position: 'absolute',
+    width: SCREEN_WIDTH * 0.55,
+    height: SCREEN_WIDTH * 0.55,
+    borderRadius: SCREEN_WIDTH * 0.3,
   },
-  tag: {
-    fontSize: 10,
-    fontWeight: fontWeight.black,
-    color: colors.primary,
-    letterSpacing: 1.4,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: fontWeight.black,
-    color: colors.text,
-    textAlign: 'center',
-    lineHeight: 32,
-    marginBottom: spacing.md,
-  },
-  description: {
-    fontSize: 14,
-    color: colors.textMuted,
-    textAlign: 'center',
-    lineHeight: 22,
-    paddingHorizontal: spacing.xs,
-    marginBottom: spacing.xxl,
-    minHeight: 66, // prevents layout jump between steps
-  },
-  dotsRow: {
-    flexDirection: 'row',
+  artworkIconWrap: {
+    width: 130,
+    height: 130,
+    borderRadius: 40,
     alignItems: 'center',
+    justifyContent: 'center',
+    ...shadow.primary,
+    shadowOpacity: 0.4,
+    shadowRadius: 20,
+    elevation: 10,
+    transform: [{ rotate: '-4deg' }],
+  },
+
+  // -- BOTTOM SECTION --
+  bottomSheet: {
+    height: SCREEN_HEIGHT * 0.45,
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: 40,
+    borderTopRightRadius: 40,
+    paddingHorizontal: spacing.xxl,
+    paddingTop: spacing.xxxl,
+    paddingBottom: Platform.OS === 'ios' ? 40 : spacing.xxxl,
+    justifyContent: 'space-between',
+    ...shadow.primary,
+    shadowOffset: { width: 0, height: -10 },
+    shadowOpacity: 0.05,
+    elevation: 20,
+  },
+  indicatorRow: {
+    flexDirection: 'row',
     gap: 8,
     marginBottom: spacing.xl,
   },
-  dot: {
+  indicator: {
+    height: 6,
     width: 8,
-    height: 8,
-    borderRadius: 4,
+    borderRadius: 3,
     backgroundColor: colors.borderSubtle,
   },
-  dotActive: {
-    width: 24,
-    backgroundColor: colors.primary,
+  textContent: {
+    flex: 1,
   },
-  dotDone: {
-    backgroundColor: colors.primaryDisabled,
+  title: {
+    fontSize: 32,
+    fontWeight: fontWeight.black,
+    color: colors.text,
+    lineHeight: 38,
+    marginBottom: spacing.md,
+  },
+  description: {
+    fontSize: 16,
+    color: colors.textMuted,
+    lineHeight: 24,
+    fontWeight: fontWeight.medium,
+  },
+  actionContainer: {
+    marginTop: spacing.xl,
+    width: '100%',
   },
   primaryButton: {
-    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    paddingVertical: 18,
+    borderRadius: radius.pill,
     ...shadow.primary,
   },
   primaryButtonText: {
-    fontSize: 17,
+    color: colors.white,
+    fontSize: 18,
     fontWeight: fontWeight.bold,
-    letterSpacing: 0.3,
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: spacing.xxxl,
-    paddingBottom: spacing.xl,
-  },
-  footerText: {
-    fontSize: 14,
-    color: colors.textMuted,
   },
   footerLink: {
-    fontSize: 14,
+    alignItems: 'center',
+    marginTop: spacing.xl,
+    paddingVertical: spacing.xs,
+  },
+  footerText: {
+    fontSize: 15,
+    color: colors.textMuted,
+    fontWeight: fontWeight.medium,
+  },
+  footerTextBold: {
     fontWeight: fontWeight.bold,
-    color: colors.primary,
   },
 });
