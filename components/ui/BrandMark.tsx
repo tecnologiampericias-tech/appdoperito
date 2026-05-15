@@ -1,7 +1,8 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { colors, fontWeight, radius } from '@/constants/theme';
+import { Image, StyleSheet, Text, View } from 'react-native';
+import { colors, fontWeight } from '@/constants/theme';
+
+const LOGO = require('@/assets/images/logo.png');
 
 type Variant = 'onLight' | 'onPrimary';
 
@@ -14,18 +15,14 @@ export function BrandMark({ variant = 'onLight', label = 'Expertise Digital' }: 
   const isOnPrimary = variant === 'onPrimary';
   return (
     <View style={styles.row}>
-      <View
+      <Image
+        source={LOGO}
         style={[
-          styles.icon,
-          { backgroundColor: isOnPrimary ? colors.white : colors.primary },
+          styles.logo,
+          isOnPrimary ? styles.logoOnPrimary : styles.logoOnLight,
         ]}
-      >
-        <Ionicons
-          name="medical"
-          size={isOnPrimary ? 20 : 16}
-          color={isOnPrimary ? colors.primary : colors.white}
-        />
-      </View>
+        resizeMode="contain"
+      />
       <Text
         style={[
           styles.label,
@@ -45,12 +42,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
   },
-  icon: {
-    width: 28,
-    height: 28,
-    borderRadius: radius.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
+  logo: {
+    width: 32,
+    height: 32,
+  },
+  logoOnPrimary: {
+    width: 36,
+    height: 36,
+  },
+  logoOnLight: {
+    // logo é branca; em fundo claro precisa de tonalidade — tintColor pinta a logo na cor primária
+    tintColor: colors.primary,
   },
   label: {
     fontSize: 17,
